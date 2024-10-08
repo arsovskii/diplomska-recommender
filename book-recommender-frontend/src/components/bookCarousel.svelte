@@ -1,7 +1,9 @@
-<script>
-	import { Slidy, Core } from '@slidy/svelte';
+<script lang="ts">
+	import { Slidy, Core, classNames } from '@slidy/svelte';
 	import Book from './book.svelte';
-	import { stairs } from '@slidy/animation';
+	import { stairs, translate } from '@slidy/animation';
+	import { fade } from 'svelte/transition';
+	import anime from 'animejs';
 
 	const slides = [
 		{
@@ -99,30 +101,55 @@
 	let index = 1,
 		position = 0,
 		limit = 2;
+
+	let hasMounted: Boolean = false;
+	let slidyMount = () => {
+		hasMounted = true;
+
+		let allSlidy = document.getElementsByClassName('slidy-slide');
+		for (let i = 0; i < allSlidy.length; i++) {
+			(allSlidy[i] as HTMLElement).style.opacity = '0';
+		}
+
+		document.getElementById('slidy-container')!.style.display = 'block';
+
+		anime({
+			targets: '.slidy-slide',
+			opacity: 1,
+			delay: anime.stagger(20) // increase delay by 100ms for each elements.
+		});
+	};
 </script>
 
-<div class="parent">
+<div transition:fade id="slidy-container" style="display:none;">
 	<Slidy
 		{slides}
 		let:item
 		animation={stairs}
 		axis="x"
 		snap="center"
-		groups="5"
 		sensitivity="10"
-		
+		on:mount={slidyMount}
 	>
 		<figure>
 			<Book book={item}></Book>
 		</figure>
 	</Slidy>
 </div>
+{#if !hasMounted}
+	<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-1/2 my-20 text-center">
+		<div class="m-auto">
+			<span class="loading loading-dots w-20"></span>
+			<div>Интересен факт: ние никогаш не грешиме!</div>
+		</div>
+	</div>
+{/if}
 
 <style>
 	@import url('https://unpkg.com/@slidy/svelte/dist/slidy.css');
 
-    .parent {
-		--slidy-height:"7%";
-		--slidy-slide-height:"70%"
+	#slidy-container {
+		--slidy-height: '7%';
+		--slidy-slide-height: '70%';
 	}
 </style>
