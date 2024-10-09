@@ -116,12 +116,13 @@
 		anime({
 			targets: '.slidy-slide',
 			opacity: 1,
-			delay: anime.stagger(20) // increase delay by 100ms for each elements.
+			duration:200,
+			delay: anime.stagger(50) // increase delay by 100ms for each elements.
 		});
 	};
 </script>
 
-<div transition:fade id="slidy-container" style="display:none;">
+<div transition:fade id="slidy-container" class="transition-all" style="display:none;">
 	<Slidy
 		{slides}
 		let:item
@@ -129,9 +130,13 @@
 		axis="x"
 		snap="center"
 		sensitivity="10"
+		--slidy-counter-bg="oklch(var(--s))"
+		--slidy-arrow-bg="oklch(var(--s))"
+		
+		
 		on:mount={slidyMount}
 	>
-		<figure>
+		<figure >
 			<Book book={item}></Book>
 		</figure>
 	</Slidy>
@@ -147,9 +152,5 @@
 
 <style>
 	@import url('https://unpkg.com/@slidy/svelte/dist/slidy.css');
-
-	#slidy-container {
-		--slidy-height: '7%';
-		--slidy-slide-height: '70%';
-	}
+	
 </style>
