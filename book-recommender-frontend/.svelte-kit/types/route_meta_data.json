@@ -1,3 +1,6 @@
 {
-	"/": []
+	"/": [],
+	"/book/[id]": [
+		"src/routes/book/[id]/+page.server.js"
+	]
 }

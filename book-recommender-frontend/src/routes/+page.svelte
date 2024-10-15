@@ -5,7 +5,7 @@
 	import Searchmodal from '../components/searchmodal.svelte';
 </script>
 
-<Header></Header>
+
 
 <div class="w-3/4 mx-auto my-5 relative">
 	<Bookcarousel></Bookcarousel>

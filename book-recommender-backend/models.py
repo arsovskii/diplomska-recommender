@@ -1,19 +1,38 @@
 class Book:
-    def __init__(self, localId, title, author, category, countReviews, rating, image):
-        self.id = localId
-        self.title = title
-        self.author = author
-        self.category = category
-        self.countReviews = countReviews
-        self.rating = rating
-        self.image = image
+    def __init__(self, row):
+        self.id = int(row["index_column"])
+        self.title = str(row["Title"])
+        self.author = str(row["authors_x"])
+        self.description = str(row["description_x"])
+        self.publisher = str(row["publisher_x"])
+        self.category = str(row["categories_x"])
+        self.publishedDate = str(row["publishedDate_x"])
+        self.infoLink = str(row["infoLink"])
+        self.countReviews = int(row["#reviews"])
+        self.rating = float(row["Average Score"])
+        self.image = str(row["image_x"])
 
-    def to_dict(self):
+    def to_dict_small(self):
         return {
             "id": self.id,
             "title": self.title,
             "author": self.author,
             "category": self.category,
+            "countReviews": self.countReviews,
+            "rating": self.rating,
+            "image": self.image,
+        }
+
+    def to_dict_large(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "author": self.author,
+            "description": self.description,
+            "publisher": self.publisher,
+            "category": self.category,
+            "publishedDate": self.publishedDate,
+            "infoLink": self.infoLink,
             "countReviews": self.countReviews,
             "rating": self.rating,
             "image": self.image,

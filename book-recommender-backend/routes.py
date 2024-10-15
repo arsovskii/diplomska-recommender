@@ -1,5 +1,5 @@
-from flask import Flask, Blueprint, jsonify
-from utils import get_random_top_books
+from flask import Flask, request, Blueprint, jsonify
+from utils import get_book, get_random_top_books
 
 api_routes = Blueprint("api", __name__)
 
@@ -9,3 +9,22 @@ def recommend_books():
     # Here you can add more logic like reading user_id or preferences from request
     rand_books = get_random_top_books(10)
     return jsonify({"books": rand_books})
+
+
+@api_routes.route("/api/book", methods=["POST"])
+def book_by_id():
+    # Here you can add more logic like reading user_id or preferences from request
+    try:
+        content_type = request.headers.get("Content-Type")
+
+        if content_type == "application/json":
+            json = request.json
+            book_id = json.get("book_id")
+            book = get_book(book_id)
+            print(book)
+            return jsonify({"book":book})
+        else:
+            raise ValueError("Content-Type must be application/json")
+
+    except Exception as e:
+        return jsonify({"error": e.args[0]})
