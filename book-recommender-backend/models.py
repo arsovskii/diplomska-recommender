@@ -13,6 +13,8 @@ class Book:
             "id": self.id,
             "title": self.title,
             "author": self.author,
+            "category": self.category,
+            "countReviews": self.countReviews,
             "rating": self.rating,
             "image": self.image,
         }

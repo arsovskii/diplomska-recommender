@@ -32,5 +32,5 @@ def get_random_top_books(number: int):
         ).to_dict()
         for _, row in sampled.iterrows()
     ]
-    print(books)
+    
     return books

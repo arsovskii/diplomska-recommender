@@ -7,24 +7,7 @@
 	import { onMount } from 'svelte';
 
 	let slides = [
-		{
-			width: 800,
-			height: 1200,
-			id: 0,
-			title: 'The Hobbit',
-			author: 'J.R.R. Tolkien',
-			image:
-				'https://books.google.mk/books/content?id=pD6arNyKyi8C&printsec=frontcover&img=1&zoom=1&imgtk=AFLRE73py6A4EznUkVRvEx7XRegXlsRbD8W0uZuBs9c6Gt_wx6UjUU0pF1th53Yx-bSK913V0zcmIHjdOEmB63-BU0AeBBt83rkLNhJIgDrP9teMEvCgB4aAPhWPBeB1PYXkbCIFOfP2'
-		},
-		{
-			width: 800,
-			height: 1200,
-			id: 1,
-			title: 'The Lord of the Rings',
-			author: 'J.R.R. Tolkien',
-			image:
-				'https://books.google.mk/books/content?id=pD6arNyKyi8C&printsec=frontcover&img=1&zoom=1&imgtk=AFLRE73py6A4EznUkVRvEx7XRegXlsRbD8W0uZuBs9c6Gt_wx6UjUU0pF1th53Yx-bSK913V0zcmIHjdOEmB63-BU0AeBBt83rkLNhJIgDrP9teMEvCgB4aAPhWPBeB1PYXkbCIFOfP2'
-		}
+	
 	];
 
 	let user_id = 1; // Example user ID
@@ -69,7 +52,9 @@
 
 	let hasMounted: Boolean = false;
 	let slidyMount = () => {
-		hasMounted = true;
+		if(!hasMounted){
+			return;
+		}
 
 		let allSlidy = document.getElementsByClassName('slidy-slide');
 		for (let i = 0; i < allSlidy.length; i++) {
@@ -81,9 +66,10 @@
 		anime({
 			targets: '.slidy-slide',
 			opacity: 1,
-			duration: 200,
+			duration: 100,
 			delay: anime.stagger(50) // increase delay by 100ms for each elements.
 		});
+		
 	};
 </script>
 
