@@ -13,23 +13,25 @@
 	};
 </script>
 
-<div class="card card-compact aspect-[3/4] bg-base-100 shadow-xl w-64">
+<div
+	class="card card-compact aspect-[3/4] bg-base-100 shadow-xl w-64 transition-transform duration-200 ease-in-out active:scale-95 hover:scale-[1.05]"
+>
 	<figure>
 		<img src={book.image} alt={book.title} class="w-full h-70 object-cover" />
 	</figure>
-	<a href="book/{book.id}">
-		<div class="card-body">
+	<div class="card-body">
+		<a href="book/{book.id}">
 			<h2 class="card-title text-2xl font-bold">{book.title}</h2>
 			<p class="text-l">{book.author}</p>
 			<p class="text-l">{book.category}</p>
+		</a>
 
-			<div class="card-actions justify-end">
-				<div class="font-thin italic">{book.countReviews} reviews</div>
-				<RatingStars id={book.id} rating={book.rating}></RatingStars>
-			</div>
-			<div class="card-actions justify-end">
-				<div class="font-thin italic">Average score: {book.rating.toFixed(2)}</div>
-			</div>
+		<div class="card-actions justify-end">
+			<div class="font-thin italic">{book.countReviews} reviews</div>
+			<RatingStars id={book.id} rating={book.rating}></RatingStars>
 		</div>
-	</a>
+		<div class="card-actions justify-end">
+			<div class="font-thin italic">Average score: {book.rating.toFixed(2)}</div>
+		</div>
+	</div>
 </div>

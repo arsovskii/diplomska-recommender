@@ -11,4 +11,3 @@
 	<Bookcarousel></Bookcarousel>
 </div>
 
-<Searchmodal></Searchmodal>

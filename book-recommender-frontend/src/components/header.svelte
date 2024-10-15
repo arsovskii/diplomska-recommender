@@ -27,7 +27,7 @@
 		</div>
 	</div>
 	<div class="navbar-center">
-		<a class="btn btn-ghost base-content text-xl">Book Recommender</a>
+		<a href="/" class="btn btn-ghost base-content text-xl">Book Recommender</a>
 	</div>
 	<div class="navbar-end">
 		<button class="btn btn-ghost btn-circle mr-4" onclick="search_modal.showModal()">

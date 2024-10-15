@@ -3,6 +3,7 @@
 
 	export let id = 0;
 	export let rating = 0;
+	export let interactible = true;
 
 	let selectedRating = 0;
 	let userRated: Boolean = false;
@@ -11,17 +12,21 @@
 
 	onMount(() => {
 		selectedRating = Math.floor(rating * 2);
-		
+
 		const stars = starsContainer.querySelectorAll('input');
 		stars.forEach((star, index) => {
 			if (index <= selectedRating) {
 				star.checked = true;
 			}
+			if(!interactible) {
+				star.disabled = true;
+				star.style.cursor = 'default';
+			}
 		});
 	});
 
 	const updateRating = (newRating: number) => {
-		console.log("oldRating", selectedRating);
+		console.log('oldRating', selectedRating);
 		console.log('newRating', newRating);
 		selectedRating = newRating;
 		userRated = true;
@@ -41,13 +46,10 @@
 		<input
 			type="radio"
 			name="rating-{id}"
-			class={`mask mask-star-2 mask-half-${index % 2 === 0 ? 1 : 2} ${
+			class={`mask mask-star-2 ${index % 2 === 0 ? 'mask-half-1' : 'mask-half-2'} ${
 				userRated ? 'bg-primary' : 'bg-secondary'
 			}`}
 			on:click={() => updateRating(index)}
-			
 		/>
 	{/each}
 </div>
-
-

@@ -1,6 +1,10 @@
 {
-	"/": [],
+	"/": [
+		"src/routes/+layout.js",
+		"src/routes/+layout.js"
+	],
 	"/book/[id]": [
-		"src/routes/book/[id]/+page.server.js"
+		"src/routes/book/[id]/+page.server.js",
+		"src/routes/+layout.js"
 	]
 }

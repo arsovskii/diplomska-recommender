@@ -5,6 +5,7 @@
 	import { fade } from 'svelte/transition';
 	import anime from 'animejs';
 	import { onMount } from 'svelte';
+	import Loader from './loader.svelte';
 
 	let slides = [
 	
@@ -92,12 +93,7 @@
 	</Slidy>
 </div>
 {#if !hasMounted}
-	<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-1/2 my-20 text-center">
-		<div class="m-auto">
-			<span class="loading loading-dots w-20"></span>
-			<div>Интересен факт: ние никогаш не грешиме!</div>
-		</div>
-	</div>
+	<Loader></Loader>
 {/if}
 
 <style>

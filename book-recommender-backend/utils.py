@@ -14,6 +14,7 @@ all_books.rename(columns={"index": "index_column"}, inplace=True)
 all_books = all_books[all_books["image_x"].notna()]
 all_books = all_books.fillna("")
 all_books["image_x"] = all_books["image_x"].apply(append_fife)
+all_books["infoLink"] = all_books["infoLink"].apply(lambda x: x.replace(".nl/", ".com/"))
 
 most_rated = all_books.sort_values(by="#reviews", ascending=False).head(100)
 
