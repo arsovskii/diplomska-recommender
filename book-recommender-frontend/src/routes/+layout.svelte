@@ -28,12 +28,11 @@
 	<div
 		in:fade={{ easing: cubicOut, duration: 300, delay: 400 }}
 		out:fade={{ easing: cubicIn, duration: 300 }}
+		class="w-full h-full relative"
 	>
-
 		<Loader />
 	</div>
 {/if}
-
 {#key data.pathname}
 	<div
 		in:fade={{ easing: cubicOut, duration: 300, delay: 400 }}

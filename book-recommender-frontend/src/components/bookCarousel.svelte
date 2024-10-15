@@ -10,6 +10,7 @@
 	let slides = [
 	
 	];
+	
 
 	let user_id = 1; // Example user ID
 
@@ -56,8 +57,11 @@
 		if(!hasMounted){
 			return;
 		}
-
+		let overlay = document.getElementsByClassName('slidy-overlay')[0] as HTMLElement;
+		overlay.style.display = 'none';
+		
 		let allSlidy = document.getElementsByClassName('slidy-slide');
+		
 		for (let i = 0; i < allSlidy.length; i++) {
 			(allSlidy[i] as HTMLElement).style.opacity = '0';
 		}
@@ -93,7 +97,9 @@
 	</Slidy>
 </div>
 {#if !hasMounted}
+<div class="w-full h-full relative">
 	<Loader></Loader>
+</div>
 {/if}
 
 <style>
