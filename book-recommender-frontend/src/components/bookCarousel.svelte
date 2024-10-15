@@ -4,8 +4,9 @@
 	import { stairs, translate } from '@slidy/animation';
 	import { fade } from 'svelte/transition';
 	import anime from 'animejs';
+	import { onMount } from 'svelte';
 
-	const slides = [
+	let slides = [
 		{
 			width: 800,
 			height: 1200,
@@ -23,84 +24,48 @@
 			author: 'J.R.R. Tolkien',
 			image:
 				'https://books.google.mk/books/content?id=pD6arNyKyi8C&printsec=frontcover&img=1&zoom=1&imgtk=AFLRE73py6A4EznUkVRvEx7XRegXlsRbD8W0uZuBs9c6Gt_wx6UjUU0pF1th53Yx-bSK913V0zcmIHjdOEmB63-BU0AeBBt83rkLNhJIgDrP9teMEvCgB4aAPhWPBeB1PYXkbCIFOfP2'
-		},
-		{
-			width: 800,
-			height: 1200,
-			id: 2,
-			title: 'The Lord of the Rings',
-			author: 'J.R.R. Tolkien',
-			image:
-				'https://books.google.mk/books/content?id=pD6arNyKyi8C&printsec=frontcover&img=1&zoom=1&imgtk=AFLRE73py6A4EznUkVRvEx7XRegXlsRbD8W0uZuBs9c6Gt_wx6UjUU0pF1th53Yx-bSK913V0zcmIHjdOEmB63-BU0AeBBt83rkLNhJIgDrP9teMEvCgB4aAPhWPBeB1PYXkbCIFOfP2'
-		},
-		{
-			width: 800,
-			height: 1200,
-			id: 3,
-			title: 'The Lord of the Rings',
-			author: 'J.R.R. Tolkien',
-			image:
-				'https://books.google.mk/books/content?id=pD6arNyKyi8C&printsec=frontcover&img=1&zoom=1&imgtk=AFLRE73py6A4EznUkVRvEx7XRegXlsRbD8W0uZuBs9c6Gt_wx6UjUU0pF1th53Yx-bSK913V0zcmIHjdOEmB63-BU0AeBBt83rkLNhJIgDrP9teMEvCgB4aAPhWPBeB1PYXkbCIFOfP2'
-		},
-		{
-			width: 800,
-			height: 1200,
-			id: 4,
-			title: 'The Lord of the Rings',
-			author: 'J.R.R. Tolkien',
-			image:
-				'https://books.google.mk/books/content?id=pD6arNyKyi8C&printsec=frontcover&img=1&zoom=1&imgtk=AFLRE73py6A4EznUkVRvEx7XRegXlsRbD8W0uZuBs9c6Gt_wx6UjUU0pF1th53Yx-bSK913V0zcmIHjdOEmB63-BU0AeBBt83rkLNhJIgDrP9teMEvCgB4aAPhWPBeB1PYXkbCIFOfP2'
-		},
-		{
-			width: 800,
-			height: 1200,
-			id: 5,
-			title: 'The Lord of the Rings',
-			author: 'J.R.R. Tolkien',
-			image:
-				'https://books.google.mk/books/content?id=pD6arNyKyi8C&printsec=frontcover&img=1&zoom=1&imgtk=AFLRE73py6A4EznUkVRvEx7XRegXlsRbD8W0uZuBs9c6Gt_wx6UjUU0pF1th53Yx-bSK913V0zcmIHjdOEmB63-BU0AeBBt83rkLNhJIgDrP9teMEvCgB4aAPhWPBeB1PYXkbCIFOfP2'
-		},
-		{
-			width: 800,
-			height: 1200,
-			id: 6,
-			title: 'The Lord of the Rings',
-			author: 'J.R.R. Tolkien',
-			image:
-				'https://books.google.mk/books/content?id=pD6arNyKyi8C&printsec=frontcover&img=1&zoom=1&imgtk=AFLRE73py6A4EznUkVRvEx7XRegXlsRbD8W0uZuBs9c6Gt_wx6UjUU0pF1th53Yx-bSK913V0zcmIHjdOEmB63-BU0AeBBt83rkLNhJIgDrP9teMEvCgB4aAPhWPBeB1PYXkbCIFOfP2'
-		},
-		{
-			width: 800,
-			height: 1200,
-			id: 7,
-			title: 'The Lord of the Rings',
-			author: 'J.R.R. Tolkien',
-			image:
-				'https://books.google.mk/books/content?id=pD6arNyKyi8C&printsec=frontcover&img=1&zoom=1&imgtk=AFLRE73py6A4EznUkVRvEx7XRegXlsRbD8W0uZuBs9c6Gt_wx6UjUU0pF1th53Yx-bSK913V0zcmIHjdOEmB63-BU0AeBBt83rkLNhJIgDrP9teMEvCgB4aAPhWPBeB1PYXkbCIFOfP2'
-		},
-		{
-			width: 800,
-			height: 1200,
-			id: 8,
-			title: 'The Lord of the Rings',
-			author: 'J.R.R. Tolkien',
-			image:
-				'https://books.google.mk/books/content?id=pD6arNyKyi8C&printsec=frontcover&img=1&zoom=1&imgtk=AFLRE73py6A4EznUkVRvEx7XRegXlsRbD8W0uZuBs9c6Gt_wx6UjUU0pF1th53Yx-bSK913V0zcmIHjdOEmB63-BU0AeBBt83rkLNhJIgDrP9teMEvCgB4aAPhWPBeB1PYXkbCIFOfP2'
-		},
-		{
-			width: 800,
-			height: 1200,
-			id: 9,
-			title: 'The Lord of the Rings',
-			author: 'J.R.R. Tolkien',
-			image:
-				'https://books.google.mk/books/content?id=pD6arNyKyi8C&printsec=frontcover&img=1&zoom=1&imgtk=AFLRE73py6A4EznUkVRvEx7XRegXlsRbD8W0uZuBs9c6Gt_wx6UjUU0pF1th53Yx-bSK913V0zcmIHjdOEmB63-BU0AeBBt83rkLNhJIgDrP9teMEvCgB4aAPhWPBeB1PYXkbCIFOfP2'
 		}
 	];
 
-	let index = 1,
-		position = 0,
-		limit = 2;
+	let user_id = 1; // Example user ID
+
+	let recommendations: any[] = [];
+
+	const getRecommendations = async () => {
+		try {
+			const response = await fetch('http://localhost:5000/api/recommend', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ user_id })
+			});
+
+			const text = await response.text();
+			console.log('Raw response:', text);
+
+			if (response.ok) {
+				const data = JSON.parse(text);
+				recommendations = data.books;
+				console.log('Recommendations:', recommendations);
+			} else {
+				console.error('Failed to fetch recommendations:', response.statusText);
+			}
+		} catch (error) {
+			console.error('Error fetching recommendations:', error);
+		}
+	};
+
+	// Fetch recommendations on component mount
+	// getRecommendations();
+
+	onMount(async () => {
+		await getRecommendations();
+		hasMounted = true;
+		console.log(recommendations)
+		slides = recommendations
+		slidyMount();
+	});
 
 	let hasMounted: Boolean = false;
 	let slidyMount = () => {
@@ -116,11 +81,12 @@
 		anime({
 			targets: '.slidy-slide',
 			opacity: 1,
-			duration:200,
+			duration: 200,
 			delay: anime.stagger(50) // increase delay by 100ms for each elements.
 		});
 	};
 </script>
+
 
 <div transition:fade id="slidy-container" class="transition-all" style="display:none;">
 	<Slidy
@@ -132,11 +98,9 @@
 		sensitivity="10"
 		--slidy-counter-bg="oklch(var(--s))"
 		--slidy-arrow-bg="oklch(var(--s))"
-		
-		
 		on:mount={slidyMount}
 	>
-		<figure >
+		<figure>
 			<Book book={item}></Book>
 		</figure>
 	</Slidy>
@@ -152,5 +116,4 @@
 
 <style>
 	@import url('https://unpkg.com/@slidy/svelte/dist/slidy.css');
-	
 </style>

@@ -21,9 +21,8 @@
 				tabindex="0"
 				class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
 			>
-				<li><a>Homepage</a></li>
-				<li><a>Portfolio</a></li>
-				<li><a>About</a></li>
+				<li><a href="/">Homepage</a></li>
+				<li><a href="https://github.com/arsovskii">Portfolio</a></li>
 			</ul>
 		</div>
 	</div>
@@ -31,6 +30,9 @@
 		<a class="btn btn-ghost base-content text-xl">Book Recommender</a>
 	</div>
 	<div class="navbar-end">
+		<button class="btn btn-ghost btn-circle mr-4" onclick="search_modal.showModal()">
+			<i class="fa-solid fa-magnifying-glass text-xl"></i>
+		</button>
 		<label class="swap swap-rotate">
 			<!-- this hidden checkbox controls the state -->
 			<input type="checkbox" class="theme-controller" value="night" />
