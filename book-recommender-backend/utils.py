@@ -14,7 +14,9 @@ all_books.rename(columns={"index": "index_column"}, inplace=True)
 all_books = all_books[all_books["image_x"].notna()]
 all_books = all_books.fillna("")
 all_books["image_x"] = all_books["image_x"].apply(append_fife)
-all_books["infoLink"] = all_books["infoLink"].apply(lambda x: x.replace(".nl/", ".com/"))
+all_books["infoLink"] = all_books["infoLink"].apply(
+    lambda x: x.replace(".nl/", ".com/")
+)
 
 most_rated = all_books.sort_values(by="#reviews", ascending=False).head(100)
 
@@ -22,12 +24,7 @@ most_rated = all_books.sort_values(by="#reviews", ascending=False).head(100)
 def get_random_top_books(number: int):
     sampled = most_rated.sample(number)
 
-    books = [
-        Book(
-            row
-        ).to_dict_small()
-        for _, row in sampled.iterrows()
-    ]
+    books = [Book(row).to_dict_small() for _, row in sampled.iterrows()]
     print(books)
     return books
 
@@ -37,6 +34,11 @@ def get_book(book_id: int):
 
     book = all_books[all_books["index_column"] == book_id].iloc[0]
 
-    return Book(
-        book
-    ).to_dict_large()
+    return Book(book).to_dict_large()
+
+
+def search_book_by_title(title: str):
+
+    books = all_books[all_books["Title"].str.contains(title, case=False)].sort_values(by="#reviews", ascending=False).head(10)
+    
+    return [Book(row).to_dict_small() for _, row in books.iterrows()]

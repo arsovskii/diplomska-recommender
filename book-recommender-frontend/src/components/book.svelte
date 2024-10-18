@@ -14,7 +14,7 @@
 </script>
 
 <div
-	class="card card-compact aspect-[3/4] bg-base-100 shadow-xl w-64 transition-transform duration-200 ease-in-out active:scale-[0.98] hover:scale-[1.05]"
+	class="card card-compact aspect-[3/4] bg-base-100 shadow-xl w-64 transition-transform duration-200 ease-in-out active:scale-[0.98] hover:scale-[1.02]"
 >
 	<figure>
 		<img src={book.image} alt={book.title} class="w-full h-70 object-cover" />

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ratingsStore, updateRating, getRating } from '$lib/stores/stores';
 	import { onMount } from 'svelte';
 
 	export let id = 0;
@@ -11,6 +12,13 @@
 	let starsContainer: HTMLElement;
 
 	onMount(() => {
+		let storeRating = getRating(id);
+		console.log(storeRating);
+		if (storeRating !== undefined) {
+			rating = storeRating;
+			userRated = true;
+		}
+		console.log('rating', rating);
 		selectedRating = Math.floor(rating * 2);
 
 		const stars = starsContainer.querySelectorAll('input');
@@ -18,18 +26,20 @@
 			if (index <= selectedRating) {
 				star.checked = true;
 			}
-			if(!interactible) {
+			if (!interactible) {
 				star.disabled = true;
 				star.style.cursor = 'default';
 			}
 		});
 	});
 
-	const updateRating = (newRating: number) => {
+	const updateRatingLocal = (newRating: number) => {
 		console.log('oldRating', selectedRating);
 		console.log('newRating', newRating);
 		selectedRating = newRating;
 		userRated = true;
+
+		updateRating(id, newRating);
 	};
 	/*
     <input type="radio" name="rating-{id}" class="mask mask-star bg-secondary" />
@@ -49,7 +59,7 @@
 			class={`mask mask-star-2 ${index % 2 === 0 ? 'mask-half-1' : 'mask-half-2'} ${
 				userRated ? 'bg-primary' : 'bg-secondary'
 			}`}
-			on:click={() => updateRating(index)}
+			on:click={() => updateRatingLocal((index + 1) / 2)}
 		/>
 	{/each}
 </div>

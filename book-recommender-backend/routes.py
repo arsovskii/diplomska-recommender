@@ -1,5 +1,5 @@
 from flask import Flask, request, Blueprint, jsonify
-from utils import get_book, get_random_top_books
+from utils import get_book, get_random_top_books, search_book_by_title
 
 api_routes = Blueprint("api", __name__)
 
@@ -23,6 +23,26 @@ def book_by_id():
             book = get_book(book_id)
             print(book)
             return jsonify({"book":book})
+        else:
+            raise ValueError("Content-Type must be application/json")
+
+    except Exception as e:
+        return jsonify({"error": e.args[0]})
+
+@api_routes.route("/api/search", methods=["POST"])
+def search_books():
+   
+   
+    try:
+        content_type = request.headers.get("Content-Type")
+
+        if content_type == "application/json":
+            json = request.json
+            title = json.get("title")
+            books = search_book_by_title(title)
+            
+
+            return jsonify({"books": books})
         else:
             raise ValueError("Content-Type must be application/json")
 

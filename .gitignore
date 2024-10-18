@@ -1,3 +1,5 @@
 node_modules
 .venv
 __pycache__
+book-recommender-backend/scraping google/wikipedia/constants.py
+data

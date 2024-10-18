@@ -8,7 +8,7 @@
 	import { fade } from 'svelte/transition';
 	import { cubicIn, cubicOut } from 'svelte/easing';
 	import Loader from '../components/loader.svelte';
-	import Searchmodal from '../components/searchmodal.svelte';
+	import Searchmodal from '../components/search/searchmodal.svelte';
 
 	let isLoading = false;
 

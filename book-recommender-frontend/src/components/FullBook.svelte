@@ -43,14 +43,16 @@
 		<div class="flex flex-col w-64 p-3 text-center">
 			<img src={book.image} alt={book.title} />
 			<div class="m-3 mx-auto">
-				<RatingStars></RatingStars>
+				<RatingStars id={book.id}></RatingStars>
 			</div>
 
 			<div class="text-lg font-medium text-base-content">Rate this book!</div>
 		</div>
 		<div class="flex flex-col w-3/4">
 			<div class="stat">
-				<div class="stat-value"><a href={book.infoLink} class="link text-wrap">{book.title}</a></div>
+				<div class="stat-value">
+					<a href={book.infoLink} class="link text-wrap">{book.title}</a>
+				</div>
 				<div class="stat-title text-xl mt-3">{book.author}</div>
 				<div class="flex flex-row text-lg align-middle">
 					<RatingStars id={1} interactible={false} rating={book.rating}></RatingStars>
