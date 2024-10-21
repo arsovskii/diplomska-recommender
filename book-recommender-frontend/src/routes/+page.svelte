@@ -5,6 +5,7 @@
 	import Header from '../components/header.svelte';
 
 	import { onMount } from 'svelte';
+	import RecommendationButton from '../components/recommendationButton.svelte';
 
 	let showFirstTime = false;
 	let favoriteGenre = '';
@@ -29,3 +30,5 @@
 <div class="w-3/4 mx-auto my-5 relative">
 	<Bookcarousel></Bookcarousel>
 </div>
+
+<RecommendationButton></RecommendationButton>

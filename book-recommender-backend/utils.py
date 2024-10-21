@@ -1,6 +1,7 @@
 import pandas as pd
 from models import Book
 from config import BOOKS_CSV_PATH
+from gnn.gnn import test
 
 
 def append_fife(url):
@@ -25,7 +26,7 @@ def get_random_top_books(number: int):
     sampled = most_rated.sample(number)
 
     books = [Book(row).to_dict_small() for _, row in sampled.iterrows()]
-    print(books)
+
     return books
 
 
@@ -39,6 +40,27 @@ def get_book(book_id: int):
 
 def search_book_by_title(title: str):
 
-    books = all_books[all_books["Title"].str.contains(title, case=False)].sort_values(by="#reviews", ascending=False).head(10)
-    
+    books = (
+        all_books[all_books["Title"].str.contains(title, case=False)]
+        .sort_values(by="#reviews", ascending=False)
+        .head(10)
+    )
+
     return [Book(row).to_dict_small() for _, row in books.iterrows()]
+
+
+def get_nodeid_from_bookid(book_id: int):
+    book_id = int(book_id)
+
+    book = all_books[all_books["index_column"] == book_id].iloc[0]
+
+    return book["book_node_id"]
+
+def parse_ratings(ratings):
+    print(ratings)
+    keys = ratings.keys()
+    for key in keys:
+        test()
+        print(get_nodeid_from_bookid(key))
+    return ratings
+
