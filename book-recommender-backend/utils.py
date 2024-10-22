@@ -1,7 +1,7 @@
 import pandas as pd
 from models import Book
 from config import BOOKS_CSV_PATH
-from gnn.gnn import test
+from gnn.gnn import train_with_user_ratings
 
 
 def append_fife(url):
@@ -59,8 +59,12 @@ def get_nodeid_from_bookid(book_id: int):
 def parse_ratings(ratings):
     print(ratings)
     keys = ratings.keys()
+    to_send = []
     for key in keys:
-        test()
-        print(get_nodeid_from_bookid(key))
+        if(ratings[key] >= 3):
+            to_send.append(get_nodeid_from_bookid(key))
+       
+    train_with_user_ratings(to_send)
+        
     return ratings
 

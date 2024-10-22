@@ -51,15 +51,16 @@ def search_books():
 
 @api_routes.route("/api/makeRecommendation", methods=["POST"])
 def make_recommendation():
-    try:
-        content_type = request.headers.get("Content-Type")
+    json = request.json
+    parse_ratings(json["ratings"])
+    # try:
+    #     content_type = request.headers.get("Content-Type")
 
-        if content_type == "application/json":
-            json = request.json
-            parse_ratings(json["ratings"])
-            return jsonify({"book": json})
-        else:
-            raise ValueError("Content-Type must be application/json")
+    #     if content_type == "application/json":
+            
+    #         return jsonify({"book": json})
+    #     else:
+    #         raise ValueError("Content-Type must be application/json")
 
-    except Exception as e:
-        return jsonify({"error": e.args[0]})
+    # except Exception as e:
+    #     return jsonify({"error": e.args[0]})
