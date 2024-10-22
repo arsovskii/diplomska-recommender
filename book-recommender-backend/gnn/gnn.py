@@ -306,7 +306,8 @@ gatModel_3 = GATModel_3(hidden_channels=64).to(
     device
 )  # Replace with your model class and initialization
 optimizer = torch.optim.Adam(
-    gatModel_3.parameters()
+    gatModel_3.parameters(),
+    lr=0.00001,
 )  # Replace with the optimizer you used
 
 # Load the saved state dicts into the model and optimizer
@@ -315,88 +316,88 @@ optimizer.load_state_dict(model_state["optimizer_state_dict"])
 
 
 def train_with_user_ratings(user_ratings):
+    gatModel_3.load_state_dict(model_state["model_state_dict"])
+    optimizer.load_state_dict(model_state["optimizer_state_dict"])
     print(user_ratings)
 
+    print(f"Training with {len(user_ratings)} user ratings")
+
     user_node_id = len(user_id_to_node_id)
-    
     new_book_node_ids = torch.tensor(user_ratings, dtype=torch.long).to(device)
-
-    # user_edge_ids = torch.full( new_book_node_ids.size(0), user_node_id, dtype=torch.long).to(device)
-
-    user_ratings_tensor = torch.tensor(
-        [user_node_id] * len(new_book_node_ids), dtype=torch.long
+    user_ratings_tensor = torch.full(
+        (len(new_book_node_ids),), user_node_id, dtype=torch.long
     ).to(device)
-
     edge_index_user = torch.stack([user_ratings_tensor, new_book_node_ids], dim=0)
 
     old_edge_index = data["user", "review", "book"].edge_index
 
-    newdata = HeteroData()
+    # Create training graph
+    train_data = HeteroData()
+    train_data["book"].node_id = torch.arange(len(result_book_features))
+    train_data["user"].node_id = torch.arange(len(user_id_to_node_id) + 10)
+    train_data["book"].x = tensor(result_book_features.values, dtype=torch.float)
 
-    newdata["book"].node_id = torch.arange(len(result_book_features))
-    newdata["user"].node_id = torch.arange(len(user_id_to_node_id) + 10)
-
-    newdata["book"].x = tensor(result_book_features.values, dtype=torch.float)
-
-    newdata["user", "review", "book"].edge_index = torch.cat(
-        [old_edge_index, edge_index_user], dim=1
+    train_data["user", "review", "book"].edge_index = torch.cat(
+        [data["user", "review", "book"].edge_index, edge_index_user], dim=1
     )
 
-    newdata = T.ToUndirected()(newdata)
+    train_data = T.ToUndirected()(train_data)
+    train_data.validate()
 
-    assert newdata["user"].num_nodes == len(user_id_to_node_id) + 10
-    assert newdata["book"].num_features == 23
-    assert newdata["user"].num_features == 0
-
-    newdata.validate()
+    assert train_data["user"].num_nodes == len(user_id_to_node_id) + 10
+    assert train_data["book"].num_features == 23
+    assert train_data["user"].num_features == 0
 
     # Batching our dataset to prevent out of memory errors
     data_loader = LinkNeighborLoader(
-        data=newdata,
+        data=train_data,
         num_neighbors=[-1, -1],
-        neg_sampling_ratio=2.0,
+        neg_sampling_ratio=4.0,  # Increased negative sampling
         edge_label_index=(("user", "review", "book"), edge_index_user),
-        batch_size=500,
+        batch_size=256,  # Adjusted batch size
         shuffle=True,
     )
 
-    loss_fn = torch.nn.BCELoss()
+    pos_weight = torch.tensor([4.0]).to(device)  # Adjust based on your data
+    loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 
     gatModel_3.train()
 
-    # for epoch in range(1, 2):
-    #     total_loss = total_examples = 0
-    #     for sampled_data in tqdm(data_loader):
-    #         optimizer.zero_grad()  # resetting the optimizer gradients
+    for epoch in range(5):
+        total_loss = total_examples = 0
+        for batch in tqdm(data_loader):
+            optimizer.zero_grad()
+            
+            batch = batch.to(device)
+            pred = gatModel_3(batch, batch["user", "review", "book"].edge_label_index)
+            
+            # Apply label smoothing
+            ground_truth = batch[("user", "review", "book")].edge_label
+            smoothing = 0.1
+            ground_truth = ground_truth * (1 - smoothing) + smoothing / 2
+            
+            loss = loss_fn(pred, ground_truth)
+            
+            # Add L2 regularization
+            l2_lambda = 0.01
+            l2_reg = torch.tensor(0.).to(device)
+            for param in gatModel_3.parameters():
+                l2_reg += torch.norm(param)
+            loss += l2_lambda * l2_reg
+            
+            loss.backward()
+            
+            # Gradient clipping
+            torch.nn.utils.clip_grad_norm_(gatModel_3.parameters(), max_norm=1.0)
+            
+            optimizer.step()
+            total_loss += float(loss) * pred.numel()
+            total_examples += pred.numel()
+        
+        print(f"Epoch: {epoch+1:03d}, Loss: {total_loss / total_examples:.4f}")
 
-    #         sampled_data.to(device)
-
-    #         pred = gatModel_3(
-    #             sampled_data, sampled_data["user", "review", "book"].edge_label_index
-    #         )
-    #         pred = torch.nn.Sigmoid()(
-    #             pred
-    #         )  # converting the logits to normalized probabilistic output
-
-    #         ground_truth = sampled_data[
-    #             ("user", "review", "book")
-    #         ].edge_label  # getting the ground truth for the target link
-    #         loss = loss_fn(
-    #             pred, ground_truth
-    #         )  # calculating the loss from the predictions and ground truth
-
-    #         loss.backward()
-    #         optimizer.step()
-    #         total_loss += float(loss) * pred.numel()
-    #         total_examples += pred.numel()
-
-    #     print(f"Epoch: {epoch:03d}, Loss: {total_loss / total_examples:.4f}")
-
-    get_predictions(1361)
-    ToPredict = HeteroData()
-
-    ToPredict["book"].node_id = torch.arange(len(result_book_features))
-    ToPredict["user"].node_id = torch.arange(len(user_id_to_node_id) + 10)
+    return get_predictions(user_node_id, user_ratings)
+   
 
     # preds = []
     # ground_truths = []
@@ -415,40 +416,154 @@ def train_with_user_ratings(user_ratings):
     # print("test")
 
 
-def get_predictions(user_node_id: int):
+def get_predictions(user_node_id: int, userratings: List[int]):
     """Get predictions for all books for a given user."""
     gatModel_3.eval()
     
+    # Create prediction data
+    pred_data = HeteroData()
+    
+    # Get all book IDs except those the user has already rated
+    all_book_ids = set(range(len(result_book_features)))
+    rated_books = set(userratings)
+    books_to_predict = list(all_book_ids - rated_books)
+    
+    # Set up nodes
+    pred_data["book"].node_id = torch.arange(len(result_book_features)).to(device)
+    pred_data["user"].node_id = torch.arange(len(user_id_to_node_id) + 10).to(device)
+    pred_data["book"].x = tensor(result_book_features.values, dtype=torch.float).to(device)
+    
+    # Include existing user ratings in the graph for better context
+    edge_list = []
+    if userratings:
+        existing_user_nodes = torch.full((len(userratings),), user_node_id, dtype=torch.long).to(device)
+        existing_book_nodes = torch.tensor(userratings, dtype=torch.long).to(device)
+        existing_edges = torch.stack([existing_user_nodes, existing_book_nodes], dim=0)
+        edge_list.append(existing_edges)
+    
+    # Add all existing edges from the training data to maintain graph structure
+    edge_list.append(data["user", "review", "book"].edge_index.to(device))
+    
+    # Combine all edges
+    pred_data["user", "review", "book"].edge_index = torch.cat(edge_list, dim=1)
+    
+    # Make the graph undirected to allow information flow
+    pred_data = T.ToUndirected()(pred_data)
+    pred_data = pred_data.to(device)
+    
+    # Process in smaller batches
+    batch_size = 512
     predictions = []
     
     with torch.no_grad():
-        for book_id in tqdm(range(len(result_book_features))):
-            # Create a single prediction instance
-            pred_data = HeteroData()
+        for i in range(0, len(books_to_predict), batch_size):
+            batch_books = books_to_predict[i:i + batch_size]
+            batch_users = torch.full((len(batch_books),), user_node_id, dtype=torch.long).to(device)
+            batch_books_tensor = torch.tensor(batch_books, dtype=torch.long).to(device)
+            batch_edge_index = torch.stack([batch_users, batch_books_tensor], dim=0)
             
-            # Set up nodes 
-            pred_data["book"].node_id = torch.tensor([book_id]).to(device)
-            pred_data["user"].node_id = torch.tensor([user_node_id]).to(device)
-            pred_data["book"].x = tensor(result_book_features.iloc[book_id].values, dtype=torch.float).unsqueeze(0).to(device)
+            # Get predictions
+            out = gatModel_3(pred_data, batch_edge_index)
             
-            # Set up edge
-            edge_index = torch.tensor([[0], [0]], dtype=torch.long).to(device)  # Single edge connecting user to book
-            pred_data["user", "review", "book"].edge_index = edge_index
+            # Apply softmax with temperature scaling
+            temperature = 1.5
+            scaled_logits = out / temperature
+            probabilities = torch.sigmoid(scaled_logits)
             
-            pred_data = T.ToUndirected()(pred_data)
-            pred_data = pred_data.to(device)
-            
-            # Get prediction
-            out = gatModel_3(pred_data, pred_data[target_edge].edge_index)
-            probability = torch.sigmoid(out).item()
-            predictions.append({book_id: probability})
-    # print(predictions)
-    print(sorted(predictions, key= lambda x: list(x.values())[0], reverse=True)[:100])
-    # Save predictions for debugging if needed
-    # with open("predictions2.pkl", "wb") as file:
-    #     pickle.dump(predictions, file)
+            # Store predictions with book features for diversity calculation
+            for book_id, prob in zip(batch_books, probabilities.cpu().numpy()):
+                book_features = result_book_features.iloc[book_id]
+                predictions.append({
+                    'book_id': book_id,
+                    'probability': float(prob),
+                    'features': book_features
+                })
     
-    return list(enumerate(predictions))
+    # Sort by probability
+    predictions.sort(key=lambda x: x['probability'], reverse=True)
+    
+    # Apply diversity filtering
+    diverse_predictions = []
+    feature_memory = []
+    similarity_threshold = 0.9
+    
+    def compute_feature_similarity(features1, features2):
+        return float(torch.cosine_similarity(
+            torch.tensor(features1.values),
+            torch.tensor(features2.values),
+            dim=0
+        ))
+    
+    for pred in predictions:
+        # Skip very low probability predictions
+        if pred['probability'] < 0.5:
+            continue
+            
+        # Check similarity with already selected books
+        is_diverse = True
+        for selected_features in feature_memory:
+            similarity = compute_feature_similarity(pred['features'], selected_features)
+            if similarity > similarity_threshold:
+                is_diverse = False
+                break
+        
+        if is_diverse:
+            diverse_predictions.append({pred['book_id']: pred['probability']})
+            feature_memory.append(pred['features'])
+            
+            # Limit number of recommendations
+            if len(diverse_predictions) >= 10:
+                break
+
+    if len(diverse_predictions) < 10:
+        for pred in predictions:
+            if len(diverse_predictions) >= 10:
+                break
+            if pred['book_id'] not in [list(x.keys())[0] for x in diverse_predictions]:
+                diverse_predictions.append({pred['book_id']: pred['probability']})
+
+    print(diverse_predictions)
+    return predictions, diverse_predictions
+    # gatModel_3.eval()
+
+    # predictions = []
+
+    # with torch.no_grad():
+    #     for book_id in tqdm(range(len(result_book_features))):
+    #         # Create a single prediction instance
+    #         if book_id in userratings:
+    #             continue
+    #         pred_data = HeteroData()
+
+    #         # Set up nodes
+    #         pred_data["book"].node_id = torch.tensor([book_id]).to(device)
+    #         pred_data["user"].node_id = torch.tensor([user_node_id]).to(device)
+    #         pred_data["book"].x = (
+    #             tensor(result_book_features.iloc[book_id].values, dtype=torch.float)
+    #             .unsqueeze(0)
+    #             .to(device)
+    #         )
+
+    #         # Set up edge
+    #         edge_index = torch.tensor([[0], [0]], dtype=torch.long).to(
+    #             device
+    #         )  # Single edge connecting user to book
+    #         pred_data["user", "review", "book"].edge_index = edge_index
+
+    #         pred_data = T.ToUndirected()(pred_data)
+    #         pred_data = pred_data.to(device)
+
+    #         # Get prediction
+    #         out = gatModel_3(pred_data, pred_data[target_edge].edge_index)
+    #         probability = torch.sigmoid(out).item()
+    #         predictions.append({book_id: probability})
+    # # print(predictions)
+    # print(sorted(predictions, key=lambda x: list(x.values())[0], reverse=False)[:])
+    # # Save predictions for debugging if needed
+    # # with open("predictions2.pkl", "wb") as file:
+    # #     pickle.dump(predictions, file)
+
+    # return list(enumerate(predictions))
 
 
 # def predict_for_user(user_id):

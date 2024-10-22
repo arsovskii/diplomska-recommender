@@ -12,8 +12,9 @@ def append_fife(url):
 
 all_books = pd.read_csv(BOOKS_CSV_PATH)
 all_books.rename(columns={"index": "index_column"}, inplace=True)
-all_books = all_books[all_books["image_x"].notna()]
+# all_books = all_books[all_books["image_x"].notna()]
 all_books = all_books.fillna("")
+all_books["book_node_id"] = all_books["book_node_id"].astype(int)
 all_books["image_x"] = all_books["image_x"].apply(append_fife)
 all_books["infoLink"] = all_books["infoLink"].apply(
     lambda x: x.replace(".nl/", ".com/")
@@ -56,15 +57,43 @@ def get_nodeid_from_bookid(book_id: int):
 
     return book["book_node_id"]
 
-def parse_ratings(ratings):
-    print(ratings)
+
+def get_bookid_from_nodeid(node_id: int):
+    node_id = int(node_id)
+
+    book = all_books[all_books["book_node_id"] == node_id].iloc[0]
+
+    return book["index_column"]
+
+
+def get_books_from_nodeids(node_ids):
+    books = []
+
+    for dict_row in node_ids:
+
+        node_id = int(list(dict_row.keys())[0])
+
+        prediction = dict_row[node_id]
+
+        book = all_books[all_books["book_node_id"] == int(node_id)].iloc[0]
+        dict_book = Book(book).to_dict_small()
+
+        dict_book["prediction"] = prediction
+
+        books.append(dict_book)
+    return books
+
+
+def retrieve_predicted_recommendations(ratings):
+
     keys = ratings.keys()
     to_send = []
     for key in keys:
-        if(ratings[key] >= 3):
+        if ratings[key] >= 3:
             to_send.append(get_nodeid_from_bookid(key))
-       
-    train_with_user_ratings(to_send)
-        
-    return ratings
 
+    predictions, diverse_predictions = train_with_user_ratings(to_send)
+
+    books = get_books_from_nodeids(diverse_predictions)
+    sorted_books = sorted(books, key=lambda x: x['prediction'], reverse=True)
+    return sorted_books

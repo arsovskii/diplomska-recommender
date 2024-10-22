@@ -1,5 +1,10 @@
 from flask import Flask, request, Blueprint, jsonify
-from utils import get_book, get_random_top_books, parse_ratings, search_book_by_title
+from utils import (
+    get_book,
+    get_random_top_books,
+    retrieve_predicted_recommendations,
+    search_book_by_title,
+)
 
 api_routes = Blueprint("api", __name__)
 
@@ -51,16 +56,17 @@ def search_books():
 
 @api_routes.route("/api/makeRecommendation", methods=["POST"])
 def make_recommendation():
-    json = request.json
-    parse_ratings(json["ratings"])
-    # try:
-    #     content_type = request.headers.get("Content-Type")
+   
+    try:
+        content_type = request.headers.get("Content-Type")
 
-    #     if content_type == "application/json":
-            
-    #         return jsonify({"book": json})
-    #     else:
-    #         raise ValueError("Content-Type must be application/json")
+        if content_type == "application/json":
+            json = request.json
+            predictions = retrieve_predicted_recommendations(json["ratings"])
 
-    # except Exception as e:
-    #     return jsonify({"error": e.args[0]})
+            return jsonify({"preds": predictions})
+        else:
+            raise ValueError("Content-Type must be application/json")
+
+    except Exception as e:
+        return jsonify({"error": e.args[0]})
