@@ -28,7 +28,7 @@
 			duration: 10000, // Longer duration as we'll speed it up
 			easing: 'easeInOutQuad',
 			loop: true,
-			update: (anim: { progress: number; }) => {
+			update: (anim: { progress: number }) => {
 				progressValue = anim.progress * 0.9;
 			}
 		});
@@ -47,7 +47,6 @@
 
 		// Animate to 100% smoothly
 		anime({
-			
 			duration: completionDuration,
 			easing: 'easeOutQuad',
 			update: (anim) => {
@@ -104,7 +103,9 @@
 
 			if (response.ok) {
 				const data = JSON.parse(text);
+
 				recommendationsStore.set(data.preds);
+
 				stopLoadingAnimation();
 			} else {
 				throw new Error('Failed to fetch recommendations');
@@ -188,8 +189,6 @@
 			<div class="text-sm text-gray-600 h-6" transition:fade>
 				{loadingMessage}
 			</div>
-
-			
 		</div>
 	{/if}
 
@@ -224,8 +223,6 @@
 </div>
 
 <style>
-	
-
 	/* Add smooth transitions for all animations */
 	button {
 		transition: all 0.2s ease-in-out;
@@ -238,7 +235,6 @@
 	}
 
 	/* Success icon animation */
-	
 
 	/* Error container animation */
 	.error-container {

@@ -485,7 +485,7 @@ def get_predictions(user_node_id: int, userratings: List[int]):
     # Apply diversity filtering
     diverse_predictions = []
     feature_memory = []
-    similarity_threshold = 0.9
+    similarity_threshold = 0.8
     
     def compute_feature_similarity(features1, features2):
         return float(torch.cosine_similarity(
@@ -503,18 +503,20 @@ def get_predictions(user_node_id: int, userratings: List[int]):
         is_diverse = True
         for selected_features in feature_memory:
             similarity = compute_feature_similarity(pred['features'], selected_features)
+            
             if similarity > similarity_threshold:
                 is_diverse = False
                 break
         
         if is_diverse:
+            
             diverse_predictions.append({pred['book_id']: pred['probability']})
             feature_memory.append(pred['features'])
             
             # Limit number of recommendations
             if len(diverse_predictions) >= 10:
                 break
-
+    
     if len(diverse_predictions) < 10:
         for pred in predictions:
             if len(diverse_predictions) >= 10:
@@ -522,7 +524,7 @@ def get_predictions(user_node_id: int, userratings: List[int]):
             if pred['book_id'] not in [list(x.keys())[0] for x in diverse_predictions]:
                 diverse_predictions.append({pred['book_id']: pred['probability']})
 
-    print(diverse_predictions)
+    
     return predictions, diverse_predictions
     # gatModel_3.eval()
 

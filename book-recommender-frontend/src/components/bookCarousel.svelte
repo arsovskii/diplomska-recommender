@@ -29,9 +29,10 @@
 	let user_id = 1;
 
 	const DRAG_SENSITIVITY = 1.5;
-	const SCROLL_SPEED_MULTIPLIER = 1;
+	const SCROLL_SPEED_MULTIPLIER = 3;
 
 	recommendationsStore.subscribe(async (newRecommendations) => {
+		console.log(newRecommendations)
 		if (newRecommendations && newRecommendations.length > 0) {
 			if (hasMounted) {
 				// Animate out current books
@@ -179,11 +180,11 @@
 	onMount(() => {
 		(async () => {
 			await getRecommendations();
-			hasMounted = true;
 			await slidyMount();
 
 			scrollContainer.addEventListener('wheel', handleWheel, { passive: false });
 		})();
+		hasMounted = true;
 
 		return () => {
 			scrollContainer?.removeEventListener('wheel', handleWheel);

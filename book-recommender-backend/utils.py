@@ -5,6 +5,8 @@ from gnn.gnn import train_with_user_ratings
 
 
 def append_fife(url):
+    if not url:
+        return "/invalid.jpg"  # Replace with your actual default image URL
     if "&fife=w800" not in url:
         return f"{url}&fife=w800"
     return url
@@ -95,5 +97,5 @@ def retrieve_predicted_recommendations(ratings):
     predictions, diverse_predictions = train_with_user_ratings(to_send)
 
     books = get_books_from_nodeids(diverse_predictions)
-    sorted_books = sorted(books, key=lambda x: x['prediction'], reverse=True)
+    sorted_books = sorted(books, key=lambda x: x["prediction"], reverse=True)
     return sorted_books
