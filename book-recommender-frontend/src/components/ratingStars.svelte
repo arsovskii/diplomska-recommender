@@ -50,7 +50,7 @@
     */
 </script>
 
-<div class="rating rating-lg rating-half" bind:this={starsContainer}>
+<div class="rating rating-md rating-half" bind:this={starsContainer}>
 	<input type="radio" name="rating-{id}" class="rating-hidden" />
 	{#each Array(10) as _, index}
 		<input

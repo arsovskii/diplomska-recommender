@@ -1,1 +1,1 @@
-BOOKS_CSV_PATH = "./data/books.csv"
+BOOKS_CSV_PATH = "./data/newBooks6.csv"

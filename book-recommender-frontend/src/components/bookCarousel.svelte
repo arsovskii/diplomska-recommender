@@ -1,20 +1,75 @@
 <script lang="ts">
-	import { Slidy, Core, classNames } from '@slidy/svelte';
-	import Book from './book.svelte';
-	import { stairs, translate } from '@slidy/animation';
-	import { fade } from 'svelte/transition';
-	import anime from 'animejs';
 	import { onMount } from 'svelte';
+	import { fade } from 'svelte/transition';
+	import { recommendationsStore } from '$lib/stores/stores';
+	import RatingStars from './ratingStars.svelte';
 	import Loader from './loader.svelte';
+	import Book from './book.svelte';
+	import anime from 'animejs';
 
-	let slides = [
-	
-	];
-	
+	interface Book {
+		id: number;
+		title: string;
+		author: string;
+		category: string;
+		countReviews: number;
+		rating: number;
+		image: string;
+	}
 
-	let user_id = 1; // Example user ID
+	export let books: Book[] = [];
+	let hasMounted = false;
+	let carouselContainer: HTMLElement;
+	let scrollContainer: HTMLElement;
+	let isDragging = false;
+	let startX: number;
+	let scrollLeft: number;
+	let isUpdating = false;
 
-	let recommendations: any[] = [];
+	let user_id = 1;
+
+	const DRAG_SENSITIVITY = 1.5;
+	const SCROLL_SPEED_MULTIPLIER = 1;
+
+	recommendationsStore.subscribe(async (newRecommendations) => {
+		if (newRecommendations && newRecommendations.length > 0) {
+			if (hasMounted) {
+				// Animate out current books
+				await animateOutBooks();
+				books = newRecommendations;
+				// Animate in new books
+				await animateInBooks();
+			} else {
+				books = newRecommendations;
+			}
+		}
+	});
+
+	const animateOutBooks = async () => {
+		isUpdating = true;
+		await anime({
+			targets: '.book-card',
+			scale: [1, 0.8],
+			opacity: [1, 0],
+			translateY: [0, 50],
+			duration: 200,
+			easing: 'easeInOutQuad',
+			delay: anime.stagger(30)
+		}).finished;
+	};
+
+	const animateInBooks = async () => {
+		await anime({
+			targets: '.book-card',
+			scale: [0.8, 1],
+			opacity: [0, 1],
+			translateY: [-50, 0],
+			duration: 200,
+			easing: 'easeOutQuad',
+			delay: anime.stagger(30)
+		}).finished;
+		isUpdating = false;
+	};
 
 	const getRecommendations = async () => {
 		try {
@@ -25,14 +80,10 @@
 				},
 				body: JSON.stringify({ user_id })
 			});
-
 			const text = await response.text();
-			console.log('Raw response:', text);
-
 			if (response.ok) {
 				const data = JSON.parse(text);
-				recommendations = data.books;
-				console.log('Recommendations:', recommendations);
+				books = data.books;
 			} else {
 				console.error('Failed to fetch recommendations:', response.statusText);
 			}
@@ -41,67 +92,166 @@
 		}
 	};
 
-	// Fetch recommendations on component mount
-	// getRecommendations();
+	// Mouse and touch event handlers remain the same as previous version
+	function handleMouseDown(e: MouseEvent) {
+		isDragging = true;
+		startX = e.pageX - scrollContainer.offsetLeft;
+		scrollLeft = scrollContainer.scrollLeft;
+		scrollContainer.style.cursor = 'grabbing';
+		scrollContainer.style.userSelect = 'none';
+		scrollContainer.classList.add('dragging');
+	}
 
-	onMount(async () => {
-		await getRecommendations();
-		hasMounted = true;
-		console.log(recommendations)
-		slides = recommendations
-		slidyMount();
-	});
+	function handleMouseMove(e: MouseEvent) {
+		if (!isDragging) return;
+		e.preventDefault();
+		const x = e.pageX - scrollContainer.offsetLeft;
+		const walk = (x - startX) * DRAG_SENSITIVITY * SCROLL_SPEED_MULTIPLIER;
+		scrollContainer.scrollLeft = scrollLeft - walk;
+	}
 
-	let hasMounted: Boolean = false;
-	let slidyMount = () => {
-		if(!hasMounted){
-			return;
-		}
-		let overlay = document.getElementsByClassName('slidy-overlay')[0] as HTMLElement;
-		overlay.style.display = 'none';
-		
-		let allSlidy = document.getElementsByClassName('slidy-slide');
-		
-		for (let i = 0; i < allSlidy.length; i++) {
-			(allSlidy[i] as HTMLElement).style.opacity = '0';
-		}
+	function handleMouseUp() {
+		if (!isDragging) return;
+		isDragging = false;
+		scrollContainer.style.cursor = 'grab';
+		scrollContainer.style.userSelect = '';
+		scrollContainer.classList.remove('dragging');
+		snapToNearestBook();
+	}
 
-		document.getElementById('slidy-container')!.style.display = 'block';
+	function handleTouchStart(e: TouchEvent) {
+		isDragging = true;
+		startX = e.touches[0].pageX - scrollContainer.offsetLeft;
+		scrollLeft = scrollContainer.scrollLeft;
+		scrollContainer.classList.add('dragging');
+	}
 
-		anime({
-			targets: '.slidy-slide',
-			opacity: 1,
-			duration: 100,
-			delay: anime.stagger(50) // increase delay by 100ms for each elements.
+	function handleTouchMove(e: TouchEvent) {
+		if (!isDragging) return;
+		const x = e.touches[0].pageX - scrollContainer.offsetLeft;
+		const walk = (x - startX) * DRAG_SENSITIVITY * SCROLL_SPEED_MULTIPLIER;
+		scrollContainer.scrollLeft = scrollLeft - walk;
+	}
+
+	function handleTouchEnd() {
+		if (!isDragging) return;
+		isDragging = false;
+		scrollContainer.classList.remove('dragging');
+		snapToNearestBook();
+	}
+
+	function snapToNearestBook() {
+		const bookWidth = 256; // Updated to match new card width (w-64)
+		const gap = 24;
+		const itemWidth = bookWidth + gap;
+		const scrollPosition = scrollContainer.scrollLeft;
+		const nearestItem = Math.round(scrollPosition / itemWidth);
+
+		scrollContainer.scrollTo({
+			left: nearestItem * itemWidth,
+			behavior: 'smooth'
 		});
-		
+	}
+
+	function handleWheel(e: WheelEvent) {
+		e.preventDefault();
+		const scrollAmount = e.deltaY * SCROLL_SPEED_MULTIPLIER;
+		scrollContainer.scrollLeft += scrollAmount;
+
+		clearTimeout(scrollContainer.dataset.scrollTimeout as any);
+		scrollContainer.dataset.scrollTimeout = setTimeout(snapToNearestBook, 150).toString();
+	}
+
+	const slidyMount = async () => {
+		if (!hasMounted) return;
+		carouselContainer.style.display = 'block';
+		await anime({
+			targets: '.book-card',
+			opacity: [0, 1],
+			scale: [0.9, 1],
+			translateY: [20, 0],
+			duration: 200,
+			easing: 'easeOutQuad',
+			delay: anime.stagger(20)
+		}).finished;
 	};
+
+	onMount(() => {
+		(async () => {
+			await getRecommendations();
+			hasMounted = true;
+			await slidyMount();
+
+			scrollContainer.addEventListener('wheel', handleWheel, { passive: false });
+		})();
+
+		return () => {
+			scrollContainer?.removeEventListener('wheel', handleWheel);
+		};
+	});
 </script>
 
-
-<div transition:fade id="slidy-container" class="transition-all" style="display:none;">
-	<Slidy
-		{slides}
-		let:item
-		animation={stairs}
-		axis="x"
-		snap="center"
-		sensitivity="10"
-		--slidy-counter-bg="oklch(var(--s))"
-		--slidy-arrow-bg="oklch(var(--s))"
-		on:mount={slidyMount}
+<div
+	class="relative w-full max-w-[90vw] mx-auto px-4 py-8"
+	bind:this={carouselContainer}
+	style="display: none;"
+>
+	<div
+		bind:this={scrollContainer}
+		class="scroll-container flex gap-6 overflow-x-auto pb-4 cursor-grab scroll-smooth"
+		on:mousedown={handleMouseDown}
+		on:mousemove={handleMouseMove}
+		on:mouseup={handleMouseUp}
+		on:mouseleave={handleMouseUp}
+		on:touchstart={handleTouchStart}
+		on:touchmove={handleTouchMove}
+		on:touchend={handleTouchEnd}
 	>
-		<figure>
-			<Book book={item}></Book>
-		</figure>
-	</Slidy>
+		{#each books as book (book.id)}
+			<Book {book}></Book>
+		{/each}
+	</div>
 </div>
+
 {#if !hasMounted}
-<div class="w-full h-full relative">
-	<Loader></Loader>
-</div>
+	<div class="w-full h-full relative">
+		<Loader />
+	</div>
 {/if}
 
 <style>
-	@import url('https://unpkg.com/@slidy/svelte/dist/slidy.css');
+	.scroll-container {
+		scroll-snap-type: x mandatory;
+		scrollbar-width: thin;
+	}
+
+	.scroll-container::-webkit-scrollbar {
+		height: 6px;
+	}
+
+	.scroll-container::-webkit-scrollbar-track {
+		@apply bg-gray-100 rounded-full;
+	}
+
+	.scroll-container::-webkit-scrollbar-thumb {
+		@apply bg-gray-300 rounded-full hover:bg-gray-400 transition-colors;
+	}
+
+	.scroll-container.dragging {
+		scroll-behavior: auto;
+		cursor: grabbing !important;
+	}
+
+	.scroll-container.dragging .book-card {
+		pointer-events: none;
+	}
+
+	.book-card {
+		scroll-snap-align: start;
+	}
+
+	/* Glass effect for rating container */
+	.rating-container {
+		@apply backdrop-blur-sm bg-white/80 rounded-lg shadow-sm;
+	}
 </style>

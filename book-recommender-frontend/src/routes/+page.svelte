@@ -27,7 +27,7 @@
 	<FirstTime></FirstTime>
 {/if}
 
-<div class="w-3/4 mx-auto my-5 relative">
+<div class="w-3/4 mx-auto my-5 mb-3 relative">
 	<Bookcarousel></Bookcarousel>
 </div>
 

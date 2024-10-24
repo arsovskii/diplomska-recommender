@@ -43,3 +43,5 @@ export function getRating(bookId:number){
     return currentRatings[bookId];
     
 }
+
+export const recommendationsStore = writable([]);

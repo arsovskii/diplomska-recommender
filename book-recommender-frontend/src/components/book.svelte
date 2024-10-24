@@ -1,4 +1,5 @@
 <script>
+	import { fade } from 'svelte/transition';
 	import RatingStars from './ratingStars.svelte';
 
 	export let book = {
@@ -13,25 +14,57 @@
 	};
 </script>
 
-<div
-	class="card card-compact aspect-[3/4] bg-base-100 shadow-xl w-64 transition-transform duration-200 ease-in-out active:scale-[0.98] hover:scale-[1.02]"
->
-	<figure>
-		<img src={book.image} alt={book.title} class="w-full h-70 object-cover" />
-	</figure>
-	<div class="card-body">
-		<a href="book/{book.id}">
-			<h2 class="card-title text-2xl font-bold">{book.title}</h2>
-			<p class="text-l">{book.author}</p>
-			<p class="text-l">{book.category}</p>
-		</a>
+<div class="book-card group w-64 transform-gpu flex-shrink-0" in:fade={{ duration: 300 }}>
+	<div
+		class="relative bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 active:scale-[0.98]"
+	>
+		<!-- Book cover with gradient overlay -->
+		<div class="relative h-[60%] overflow-hidden rounded-t-xl">
+			<div
+				class="absolute inset-0 bg-gradient-to-t from-black/40 via-black/0 to-black/10 z-10 opacity-60 group-hover:opacity-40 transition-opacity"
+			></div>
+			<img
+				src={book.image}
+				alt={book.title}
+				class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+				loading="lazy"
+			/>
 
-		<div class="card-actions justify-end">
-			<div class="font-thin italic">{book.countReviews} reviews</div>
-			<RatingStars id={book.id} rating={book.rating}></RatingStars>
+			<!-- Category badge -->
+			<div class="absolute top-2 left-2 z-20">
+				<span
+					class="px-2 py-1 text-xs font-medium text-white bg-black/50 backdrop-blur-sm rounded-full"
+				>
+					{book.category}
+				</span>
+			</div>
 		</div>
-		<div class="card-actions justify-end">
-			<div class="font-thin italic">Average score: {book.rating.toFixed(2)}</div>
+
+		<!-- Book info -->
+		<div class="p-4 h-[40%] flex flex-col justify-between">
+			<div>
+				<a href="book/{book.id}" class="block group-hover:text-blue-600 transition-colors">
+					<h3 class="font-bold text-lg leading-tight line-clamp-2 mb-1">
+						{book.title}
+					</h3>
+					<p class="text-sm text-gray-600">
+						{book.author}
+					</p>
+				</a>
+			</div>
+
+			<!-- Rating section -->
+			<div class="rating-container mt-2 p-2">
+				<div class="flex items-center justify-between mb-1">
+					<RatingStars id={book.id} rating={book.rating} />
+				</div>
+				<div class="text-sm text-gray-600 text-right">
+					{book.countReviews} reviews
+				</div>
+				<div class="text-sm text-gray-600 text-right">
+					Average: {book.rating.toFixed(2)}
+				</div>
+			</div>
 		</div>
 	</div>
 </div>
