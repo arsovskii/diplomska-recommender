@@ -24,15 +24,20 @@
 	let isDragging = false;
 	let startX: number;
 	let scrollLeft: number;
+	let lastScrollTime = 0;
 	let isUpdating = false;
+	let currentScrollAnimation: anime.AnimeInstance | null = null;
+	let velocity = 0;
+	let lastX = 0;
+	let rafId: number | null = null;
 
 	let user_id = 1;
 
-	const DRAG_SENSITIVITY = 1.5;
-	const SCROLL_SPEED_MULTIPLIER = 3;
+	const MOMENTUM_FACTOR = 0.95;
+	const VELOCITY_THRESHOLD = 0.5;
 
 	recommendationsStore.subscribe(async (newRecommendations) => {
-		console.log(newRecommendations)
+		console.log(newRecommendations);
 		if (newRecommendations && newRecommendations.length > 0) {
 			if (hasMounted) {
 				// Animate out current books
@@ -96,8 +101,20 @@
 	// Mouse and touch event handlers remain the same as previous version
 	function handleMouseDown(e: MouseEvent) {
 		isDragging = true;
-		startX = e.pageX - scrollContainer.offsetLeft;
+		startX = e.pageX;
+		lastX = e.pageX;
 		scrollLeft = scrollContainer.scrollLeft;
+		velocity = 0;
+
+		if (currentScrollAnimation) {
+			currentScrollAnimation.pause();
+		}
+
+		if (rafId) {
+			cancelAnimationFrame(rafId);
+			rafId = null;
+		}
+
 		scrollContainer.style.cursor = 'grabbing';
 		scrollContainer.style.userSelect = 'none';
 		scrollContainer.classList.add('dragging');
@@ -106,9 +123,27 @@
 	function handleMouseMove(e: MouseEvent) {
 		if (!isDragging) return;
 		e.preventDefault();
-		const x = e.pageX - scrollContainer.offsetLeft;
-		const walk = (x - startX) * DRAG_SENSITIVITY * SCROLL_SPEED_MULTIPLIER;
-		scrollContainer.scrollLeft = scrollLeft - walk;
+
+		const x = e.pageX;
+		const dx = x - lastX;
+		velocity = dx;
+		lastX = x;
+
+		const walk = startX - x;
+		scrollContainer.scrollLeft = scrollLeft + walk;
+	}
+
+	function applyMomentum() {
+		if (Math.abs(velocity) < VELOCITY_THRESHOLD) {
+			velocity = 0;
+			rafId = null;
+			snapToNearestBook();
+			return;
+		}
+
+		scrollContainer.scrollLeft -= velocity;
+		velocity *= MOMENTUM_FACTOR;
+		rafId = requestAnimationFrame(applyMomentum);
 	}
 
 	function handleMouseUp() {
@@ -117,52 +152,103 @@
 		scrollContainer.style.cursor = 'grab';
 		scrollContainer.style.userSelect = '';
 		scrollContainer.classList.remove('dragging');
-		snapToNearestBook();
+
+		if (Math.abs(velocity) > VELOCITY_THRESHOLD) {
+			rafId = requestAnimationFrame(applyMomentum);
+		} else {
+			snapToNearestBook();
+		}
 	}
 
 	function handleTouchStart(e: TouchEvent) {
 		isDragging = true;
-		startX = e.touches[0].pageX - scrollContainer.offsetLeft;
+		startX = e.touches[0].pageX;
+		lastX = e.touches[0].pageX;
 		scrollLeft = scrollContainer.scrollLeft;
+		velocity = 0;
+
+		if (currentScrollAnimation) {
+			currentScrollAnimation.pause();
+		}
+
+		if (rafId) {
+			cancelAnimationFrame(rafId);
+			rafId = null;
+		}
+
 		scrollContainer.classList.add('dragging');
 	}
 
 	function handleTouchMove(e: TouchEvent) {
 		if (!isDragging) return;
-		const x = e.touches[0].pageX - scrollContainer.offsetLeft;
-		const walk = (x - startX) * DRAG_SENSITIVITY * SCROLL_SPEED_MULTIPLIER;
-		scrollContainer.scrollLeft = scrollLeft - walk;
+		const x = e.touches[0].pageX;
+		const dx = x - lastX;
+		velocity = dx;
+		lastX = x;
+
+		const walk = startX - x;
+		scrollContainer.scrollLeft = scrollLeft + walk;
 	}
 
 	function handleTouchEnd() {
 		if (!isDragging) return;
 		isDragging = false;
 		scrollContainer.classList.remove('dragging');
-		snapToNearestBook();
+
+		if (Math.abs(velocity) > VELOCITY_THRESHOLD) {
+			rafId = requestAnimationFrame(applyMomentum);
+		} else {
+			snapToNearestBook();
+		}
 	}
 
 	function snapToNearestBook() {
-		const bookWidth = 256; // Updated to match new card width (w-64)
+		const bookWidth = 256;
 		const gap = 24;
 		const itemWidth = bookWidth + gap;
 		const scrollPosition = scrollContainer.scrollLeft;
 		const nearestItem = Math.round(scrollPosition / itemWidth);
 
-		scrollContainer.scrollTo({
-			left: nearestItem * itemWidth,
-			behavior: 'smooth'
+		if (currentScrollAnimation) {
+			currentScrollAnimation.pause();
+		}
+
+		currentScrollAnimation = anime({
+			targets: scrollContainer,
+			scrollLeft: nearestItem * itemWidth,
+			duration: 600,
+			easing: 'cubicBezier(0.4, 0.0, 0.2, 1)'
 		});
 	}
 
+	let accumulatedDelta = 0;
+	const WHEEL_SENSITIVITY = 0.5;
+
 	function handleWheel(e: WheelEvent) {
 		e.preventDefault();
-		const scrollAmount = e.deltaY * SCROLL_SPEED_MULTIPLIER;
-		scrollContainer.scrollLeft += scrollAmount;
 
-		clearTimeout(scrollContainer.dataset.scrollTimeout as any);
-		scrollContainer.dataset.scrollTimeout = setTimeout(snapToNearestBook, 150).toString();
+		// Accumulate the delta for smoother scrolling
+		accumulatedDelta += e.deltaY * WHEEL_SENSITIVITY;
+
+		// Clear any existing animation
+		if (currentScrollAnimation) {
+			currentScrollAnimation.pause();
+		}
+
+		if (rafId) {
+			cancelAnimationFrame(rafId);
+		}
+
+		// Use RAF for smooth scrolling
+		rafId = requestAnimationFrame(() => {
+			scrollContainer.scrollLeft += accumulatedDelta;
+			accumulatedDelta = 0;
+
+			// Set up snap timeout
+			clearTimeout(scrollContainer.dataset.scrollTimeout as any);
+			scrollContainer.dataset.scrollTimeout = setTimeout(snapToNearestBook, 150).toString();
+		});
 	}
-
 	const slidyMount = async () => {
 		if (!hasMounted) return;
 		carouselContainer.style.display = 'block';
@@ -187,6 +273,7 @@
 		hasMounted = true;
 
 		return () => {
+			if (rafId) cancelAnimationFrame(rafId);
 			scrollContainer?.removeEventListener('wheel', handleWheel);
 		};
 	});
@@ -199,7 +286,7 @@
 >
 	<div
 		bind:this={scrollContainer}
-		class="scroll-container flex gap-6 overflow-x-auto pb-4 cursor-grab scroll-smooth"
+		class="scroll-container flex gap-6 overflow-x-auto pb-4 cursor-grab will-change-scroll"
 		on:mousedown={handleMouseDown}
 		on:mousemove={handleMouseMove}
 		on:mouseup={handleMouseUp}
@@ -222,8 +309,9 @@
 
 <style>
 	.scroll-container {
-		scroll-snap-type: x mandatory;
 		scrollbar-width: thin;
+		-webkit-overflow-scrolling: touch;
+		scroll-behavior: auto !important;
 	}
 
 	.scroll-container::-webkit-scrollbar {
@@ -239,7 +327,7 @@
 	}
 
 	.scroll-container.dragging {
-		scroll-behavior: auto;
+		scroll-behavior: auto !important;
 		cursor: grabbing !important;
 	}
 
@@ -248,7 +336,7 @@
 	}
 
 	.book-card {
-		scroll-snap-align: start;
+		transform: translateZ(0);
 	}
 
 	/* Glass effect for rating container */

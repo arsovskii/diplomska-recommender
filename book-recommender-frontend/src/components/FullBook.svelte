@@ -13,54 +13,104 @@
 		category: 'nekakva',
 		countReviews: 123,
 		rating: 4.73,
-		image:
-			'https://books.google.mk/books/content?id=pD6arNyKyi8C&printsec=frontcover&img=1&zoom=1&imgtk=AFLRE73py6A4EznUkVRvEx7XRegXlsRbD8W0uZuBs9c6Gt_wx6UjUU0pF1th53Yx-bSK913V0zcmIHjdOEmB63-BU0AeBBt83rkLNhJIgDrP9teMEvCgB4aAPhWPBeB1PYXkbCIFOfP2'
+		image: undefined
 	};
-
 	export let loading = true;
+
+	// Default placeholder image (you can replace this with your preferred placeholder)
+
+	// Helper function to format date with fallback
+	const formatDate = (/** @type {string | number | Date} */ dateString) => {
+		if (!dateString) return null;
+		const date = new Date(dateString);
+		return !isNaN(date.getTime()) ? date.toLocaleDateString() : null;
+	};
 </script>
 
 {#if loading}
-	<div class="flex flex-row h-72 gap-10">
-		<div class="flex flex-col w-64 p-3 text-center">
-			<div class="skeleton h-full w-full"></div>
+	<div
+		class="flex flex-col md:flex-row min-h-[24rem] gap-8 p-6 bg-base-100 rounded-lg shadow-lg animate-pulse"
+	>
+		<div class="flex flex-col w-full md:w-64 items-center">
+			<div class="skeleton h-80 w-56"></div>
+			<div class="skeleton h-8 w-40 mt-4"></div>
+			<div class="skeleton h-6 w-32 mt-2"></div>
 		</div>
-		<div class="flex flex-col w-3/4 gap-5">
-			<div class="skeleton h-10 w-28"></div>
-			<div class="skeleton h-4 w-40"></div>
-			<div class="flex flex-row text-lg align-middle">
-				<div class="skeleton h-6 w-52"></div>
-			</div>
-			<div class="skeleton h-4 w-9/12"></div>
+		<div class="flex flex-col flex-1 gap-6">
+			<div class="skeleton h-12 w-3/4"></div>
+			<div class="skeleton h-6 w-48"></div>
+			<div class="skeleton h-8 w-64"></div>
 			<div class="skeleton h-4 w-full"></div>
-			<div class="skeleton h-4 w-10/12"></div>
-			<div class="skeleton h-4 w-11/12"></div>
-			<div class="skeleton h-4 w-28"></div>
+			<div class="skeleton h-4 w-full"></div>
+			<div class="skeleton h-4 w-3/4"></div>
+			<div class="skeleton h-6 w-40 mt-4"></div>
 		</div>
 	</div>
 {:else}
-	<div class="flex flex-row gap-10">
-		<div class="flex flex-col w-64 p-3 text-center">
-			<img src={book.image} alt={book.title} />
-			<div class="m-3 mx-auto">
-				<RatingStars id={book.id}></RatingStars>
+	<div
+		class="flex flex-col md:flex-row gap-8 p-6 bg-base-100 rounded-lg shadow-lg transition-all hover:shadow-xl"
+	>
+		<div class="flex flex-col w-full md:w-64 items-center">
+			<div class="relative group">
+				<img
+					src={book.image}
+					alt={book.title}
+					class="w-56 h-auto rounded-lg shadow-md transition-transform duration-300 group-hover:scale-105"
+				/>
+				<div
+					class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300 rounded-lg"
+				></div>
 			</div>
 
-			<div class="text-lg font-medium text-base-content">Rate this book!</div>
+			<div class="mt-6 space-y-3 text-center">
+				<RatingStars id={book.id} />
+				<div class="text-lg font-medium text-primary">Rate this book!</div>
+			</div>
 		</div>
-		<div class="flex flex-col w-3/4">
-			<div class="stat">
-				<div class="stat-value">
-					<a href={book.infoLink} class="link text-wrap">{book.title}</a>
+
+		<div class="flex flex-col flex-1">
+			<div class="space-y-4">
+				<h1 class="text-3xl font-bold hover:text-primary transition-colors">
+					<a href={book.infoLink} class="hover:underline">{book.title}</a>
+				</h1>
+
+				{#if book.author}
+					<h2 class="text-xl text-base-content/80">by {book.author}</h2>
+				{/if}
+
+				<div class="flex flex-wrap items-center gap-4 mt-2">
+					<RatingStars id={1} interactible={false} rating={book.rating} />
+					<span class="text-2xl font-bold text-primary">{book.rating.toFixed(2)}</span>
+					<span class="text-base-content/70">
+						({book.countReviews?.toLocaleString() ?? 0} reviews)
+					</span>
 				</div>
-				<div class="stat-title text-xl mt-3">{book.author}</div>
-				<div class="flex flex-row text-lg align-middle">
-					<RatingStars id={1} interactible={false} rating={book.rating}></RatingStars>
-					<span class="stat-value font-bold ml-10">{book.rating.toFixed(2)}</span>
-					<span class="ml-3 my-auto">({book.countReviews} reviews)</span>
+
+				{#if book.description}
+					<div class="mt-6 space-y-4">
+						<p class="text-lg leading-relaxed text-base-content/90">{book.description}</p>
+					</div>
+				{/if}
+
+				<div class="flex flex-wrap gap-4 pt-4">
+					{#if book.category}
+						<div class="badge badge-primary badge-lg">
+							{book.category}
+						</div>
+					{/if}
+
+					{#if formatDate(book.publishedDate)}
+						<div class="badge badge-ghost badge-lg">
+							Published: {formatDate(book.publishedDate)}
+						</div>
+					{/if}
+
+					{#if book.publisher}
+						<div class="badge badge-ghost badge-lg">
+							{book.publisher}
+						</div>
+					{/if}
 				</div>
-				<div class="stat-desc whitespace-normal text-lg mt-8">{book.description}</div>
-				<div class="mt-10 text-lg">Category: {book.category}</div>
 			</div>
 		</div>
 	</div>

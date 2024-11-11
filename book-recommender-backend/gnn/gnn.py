@@ -367,37 +367,36 @@ def train_with_user_ratings(user_ratings):
         total_loss = total_examples = 0
         for batch in tqdm(data_loader):
             optimizer.zero_grad()
-            
+
             batch = batch.to(device)
             pred = gatModel_3(batch, batch["user", "review", "book"].edge_label_index)
-            
+
             # Apply label smoothing
             ground_truth = batch[("user", "review", "book")].edge_label
             smoothing = 0.1
             ground_truth = ground_truth * (1 - smoothing) + smoothing / 2
-            
+
             loss = loss_fn(pred, ground_truth)
-            
+
             # Add L2 regularization
             l2_lambda = 0.01
-            l2_reg = torch.tensor(0.).to(device)
+            l2_reg = torch.tensor(0.0).to(device)
             for param in gatModel_3.parameters():
                 l2_reg += torch.norm(param)
             loss += l2_lambda * l2_reg
-            
+
             loss.backward()
-            
+
             # Gradient clipping
             torch.nn.utils.clip_grad_norm_(gatModel_3.parameters(), max_norm=1.0)
-            
+
             optimizer.step()
             total_loss += float(loss) * pred.numel()
             total_examples += pred.numel()
-        
+
         print(f"Epoch: {epoch+1:03d}, Loss: {total_loss / total_examples:.4f}")
 
     return get_predictions(user_node_id, user_ratings)
-   
 
     # preds = []
     # ground_truths = []
@@ -419,112 +418,123 @@ def train_with_user_ratings(user_ratings):
 def get_predictions(user_node_id: int, userratings: List[int]):
     """Get predictions for all books for a given user."""
     gatModel_3.eval()
-    
+
     # Create prediction data
     pred_data = HeteroData()
-    
+
     # Get all book IDs except those the user has already rated
     all_book_ids = set(range(len(result_book_features)))
     rated_books = set(userratings)
     books_to_predict = list(all_book_ids - rated_books)
-    
+
     # Set up nodes
     pred_data["book"].node_id = torch.arange(len(result_book_features)).to(device)
     pred_data["user"].node_id = torch.arange(len(user_id_to_node_id) + 10).to(device)
-    pred_data["book"].x = tensor(result_book_features.values, dtype=torch.float).to(device)
-    
+    pred_data["book"].x = tensor(result_book_features.values, dtype=torch.float).to(
+        device
+    )
+
     # Include existing user ratings in the graph for better context
     edge_list = []
     if userratings:
-        existing_user_nodes = torch.full((len(userratings),), user_node_id, dtype=torch.long).to(device)
+        existing_user_nodes = torch.full(
+            (len(userratings),), user_node_id, dtype=torch.long
+        ).to(device)
         existing_book_nodes = torch.tensor(userratings, dtype=torch.long).to(device)
         existing_edges = torch.stack([existing_user_nodes, existing_book_nodes], dim=0)
         edge_list.append(existing_edges)
-    
+
     # Add all existing edges from the training data to maintain graph structure
     edge_list.append(data["user", "review", "book"].edge_index.to(device))
-    
+
     # Combine all edges
     pred_data["user", "review", "book"].edge_index = torch.cat(edge_list, dim=1)
-    
+
     # Make the graph undirected to allow information flow
     pred_data = T.ToUndirected()(pred_data)
     pred_data = pred_data.to(device)
-    
+
     # Process in smaller batches
     batch_size = 512
     predictions = []
-    
+
     with torch.no_grad():
         for i in range(0, len(books_to_predict), batch_size):
-            batch_books = books_to_predict[i:i + batch_size]
-            batch_users = torch.full((len(batch_books),), user_node_id, dtype=torch.long).to(device)
+            batch_books = books_to_predict[i : i + batch_size]
+            batch_users = torch.full(
+                (len(batch_books),), user_node_id, dtype=torch.long
+            ).to(device)
             batch_books_tensor = torch.tensor(batch_books, dtype=torch.long).to(device)
             batch_edge_index = torch.stack([batch_users, batch_books_tensor], dim=0)
-            
+
             # Get predictions
             out = gatModel_3(pred_data, batch_edge_index)
-            
+
             # Apply softmax with temperature scaling
             temperature = 1.5
             scaled_logits = out / temperature
             probabilities = torch.sigmoid(scaled_logits)
-            
+
             # Store predictions with book features for diversity calculation
             for book_id, prob in zip(batch_books, probabilities.cpu().numpy()):
                 book_features = result_book_features.iloc[book_id]
-                predictions.append({
-                    'book_id': book_id,
-                    'probability': float(prob),
-                    'features': book_features
-                })
-    
+                predictions.append(
+                    {
+                        "book_id": book_id,
+                        "probability": float(prob),
+                        "features": book_features,
+                    }
+                )
+
     # Sort by probability
-    predictions.sort(key=lambda x: x['probability'], reverse=True)
-    
+    predictions.sort(key=lambda x: x["probability"], reverse=True)
+
     # Apply diversity filtering
     diverse_predictions = []
     feature_memory = []
     similarity_threshold = 0.8
-    
+
     def compute_feature_similarity(features1, features2):
-        return float(torch.cosine_similarity(
-            torch.tensor(features1.values),
-            torch.tensor(features2.values),
-            dim=0
-        ))
-    
+        return float(
+            torch.cosine_similarity(
+                torch.tensor(features1.values), torch.tensor(features2.values), dim=0
+            )
+        )
+
     for pred in predictions:
         # Skip very low probability predictions
-        if pred['probability'] < 0.5:
+        if pred["probability"] < 0.5 :
             continue
-            
+
         # Check similarity with already selected books
         is_diverse = True
         for selected_features in feature_memory:
-            similarity = compute_feature_similarity(pred['features'], selected_features)
-            
+            similarity = compute_feature_similarity(pred["features"], selected_features)
+
             if similarity > similarity_threshold:
                 is_diverse = False
                 break
-        
+
         if is_diverse:
-            
-            diverse_predictions.append({pred['book_id']: pred['probability']})
-            feature_memory.append(pred['features'])
-            
+
+            diverse_predictions.append({pred["book_id"]: pred["probability"]})
+            feature_memory.append(pred["features"])
+
             # Limit number of recommendations
             if len(diverse_predictions) >= 10:
                 break
-    
+
     if len(diverse_predictions) < 10:
         for pred in predictions:
             if len(diverse_predictions) >= 10:
                 break
-            if pred['book_id'] not in [list(x.keys())[0] for x in diverse_predictions]:
-                diverse_predictions.append({pred['book_id']: pred['probability']})
 
-    
+            if pred["probability"] > 0.95:
+                continue
+
+            if pred["book_id"] not in [list(x.keys())[0] for x in diverse_predictions]:
+                diverse_predictions.append({pred["book_id"]: pred["probability"]})
+
     return predictions, diverse_predictions
     # gatModel_3.eval()
 

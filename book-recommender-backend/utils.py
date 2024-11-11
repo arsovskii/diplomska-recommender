@@ -1,3 +1,4 @@
+import re
 import pandas as pd
 from models import Book
 from config import BOOKS_CSV_PATH
@@ -12,17 +13,39 @@ def append_fife(url):
     return url
 
 
+def clean_value(value):
+    if pd.isna(value) or value == "[]":
+        return ""
+
+    return re.sub(r"[\[\]']", "", value)
+
+
+def clean_category(row):
+
+    cleaned_category = clean_value(row["categories_x"])
+    cleaned_genres_wiki = clean_value(row["genres_wiki"])
+
+    return cleaned_category if cleaned_category else cleaned_genres_wiki
+
+
 all_books = pd.read_csv(BOOKS_CSV_PATH)
 all_books.rename(columns={"index": "index_column"}, inplace=True)
 # all_books = all_books[all_books["image_x"].notna()]
+
 all_books = all_books.fillna("")
 all_books["book_node_id"] = all_books["book_node_id"].astype(int)
-all_books["image_x"] = all_books["image_x"].apply(append_fife)
+all_books["categories_x"] = all_books.apply(clean_category, axis=1)
 all_books["infoLink"] = all_books["infoLink"].apply(
     lambda x: x.replace(".nl/", ".com/")
 )
 
-most_rated = all_books.sort_values(by="#reviews", ascending=False).head(100)
+most_rated = (
+    all_books[all_books["image_x"] != ""]
+    .sort_values(by="#reviews", ascending=False)
+    .head(100)
+)
+all_books["image_x"] = all_books["image_x"].apply(append_fife)
+
 
 
 def get_random_top_books(number: int):
