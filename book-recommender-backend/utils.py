@@ -52,10 +52,21 @@ all_books["image_x"] = all_books["image_x"].apply(append_fife)
 
 
 
-def get_random_top_books(number: int):
+def get_random_top_books(number: int, genres=None):
     """ Враќа случајно избрани книги од најпопуларните """
+    
     sampled = most_rated.sample(number)
-
+    
+    if genres:
+        genre_condition = sampled["categories_x"].str.contains("|".join(genres), case=False, na=False) | \
+                          sampled["genres_wiki"].str.contains("|".join(genres), case=False, na=False)
+        sampled = sampled[genre_condition]
+        
+        additional_needed = number - len(sampled)
+        if len(sampled) < number:
+            additional_books = most_rated[~most_rated.index.isin(sampled.index)].sample(additional_needed)
+            sampled = pd.concat([sampled, additional_books])
+    
     books = [Book(row).to_dict_small() for _, row in sampled.iterrows()]
 
     return books

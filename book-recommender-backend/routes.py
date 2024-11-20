@@ -1,4 +1,7 @@
 from flask import Flask, request, Blueprint, jsonify
+import ast
+import pandas as pd
+
 from utils import (
     get_book,
     get_random_top_books,
@@ -8,13 +11,42 @@ from utils import (
 
 api_routes = Blueprint("api", __name__)
 
+num_recommendations = 10    
 
 @api_routes.route("/api/recommend", methods=["POST"])
 def recommend_books():
     # Враќаме 10 најпопуларни книги 
     
-    rand_books = get_random_top_books(10)
-    return jsonify({"books": rand_books})
+    
+    rand_books = []
+    try:
+        content_type = request.headers.get("Content-Type")
+
+        if content_type == "application/json":
+            
+            
+            json = request.json
+            genres = json.get("genres")
+
+            if genres:
+                # Пример на json што се праќа: {"genres": ["Fantasy", "Adventure"]}
+                genres_list = ast.literal_eval(genres)
+                rand_books = get_random_top_books(num_recommendations, genres_list)
+            else:
+                rand_books = get_random_top_books(num_recommendations)
+
+          
+
+            return jsonify({"books": rand_books})
+        else:
+            raise ValueError("Content-Type must be application/json")
+
+    except Exception:
+       
+        return jsonify({"books": rand_books})
+
+    
+    # return jsonify({"books": rand_books})
 
 
 @api_routes.route("/api/book", methods=["POST"])

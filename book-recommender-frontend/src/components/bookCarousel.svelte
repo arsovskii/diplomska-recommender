@@ -30,6 +30,7 @@
 	let velocity = 0;
 	let lastX = 0;
 	let rafId: number | null = null;
+	let favoriteGenre = '';
 
 	let user_id = 1;
 
@@ -82,13 +83,14 @@
 
 	// Функција за добивање на првични препораки
 	const getRecommendations = async () => {
+		console.log(favoriteGenre);
 		try {
 			const response = await fetch('http://localhost:5000/api/recommend', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({ user_id })
+				body: JSON.stringify({ "user_id":user_id, "genres": favoriteGenre })
 			});
 			const text = await response.text();
 			if (response.ok) {
@@ -278,10 +280,17 @@
 	// При mount на компонентата, добиваме препораки и ги прикажуваме
 	onMount(() => {
 		(async () => {
+			const storedGenre = localStorage.getItem('favoriteGenres');
+			if (storedGenre) {
+				favoriteGenre = storedGenre;
+			}
+
 			await getRecommendations();
 			await slidyMount();
+			if(scrollContainer){
+				scrollContainer.addEventListener('wheel', handleWheel, { passive: false });	
+			}
 
-			scrollContainer.addEventListener('wheel', handleWheel, { passive: false });
 		})();
 		hasMounted = true;
 
@@ -290,6 +299,8 @@
 			scrollContainer?.removeEventListener('wheel', handleWheel);
 		};
 	});
+
+	
 </script>
 
 <div
