@@ -41,6 +41,7 @@ all_books["categories_x"] = all_books.apply(clean_category, axis=1)
 all_books["infoLink"] = all_books["infoLink"].apply(
     lambda x: x.replace(".nl/", ".com/")
 )
+all_books["authors_x"] = all_books["authors_x"].fillna("")
 
 most_rated = (
     all_books[all_books["image_x"] != ""]
@@ -72,7 +73,7 @@ def get_book(book_id: int):
 def search_book_by_title(title: str):
     """ Пребарува книги според наслов """
     books = (
-        all_books[all_books["Title"].str.contains(title, case=False)]
+        all_books[(all_books["Title"].str.contains(title, case=False, na=False)) | (all_books["authors_x"].str.contains(title, case=False, na=False))]
         .sort_values(by="#reviews", ascending=False)
         .head(10)
     )
