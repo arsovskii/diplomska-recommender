@@ -8,6 +8,8 @@
 	let books: never[] = [];
 	let loading: boolean = false;
 	let inputting: boolean = false;
+
+	// фунцкија за пребарување на книга, со debounce - при промена на вредноста на input полето, се чека 200ms пред да се изврши пребарувањето
 	function searchBook() {
 		console.log('searching...');
 		clearTimeout(timer);
@@ -25,6 +27,7 @@
 		}, 200);
 	}
 
+	// фунцкија за пребарување на книга
 	const getSearchedBooks = async () => {
 		try {
 			const response = await fetch('http://localhost:5000/api/search', {
@@ -62,13 +65,15 @@
 <dialog id="search_modal" class="modal h-full overflow-hidden" bind:this={search_modal}>
 	<div class="modal-box mt-0 pt-0">
 		<form method="dialog sticky">
-			<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 z-20">✕</button>
-			<!--todo: ne raboti-->
+			<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 z-20" on:click={closeModal}>✕</button>
 		</form>
 		<div
 			class="text-lg font-bold sticky top-0 py-6 z-10 bg-gradient-to-b from-base-100 from-60% via-base-100 to-transparent"
 		>
-			<h3 class="text-lg font-bold mb-3 pb-3">Пребарај си книга!</h3>
+			<h3 class="text-lg font-bold mb-3 pb-3">
+				Search for a book
+				
+			</h3>
 			<div class="w-full my-3">
 				<input
 					type="text"

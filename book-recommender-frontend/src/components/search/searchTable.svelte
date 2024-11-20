@@ -13,7 +13,8 @@
 			title: 'Hadassah'
 		}
 	];
-	export let onLinkClick; // Accept the function as a prop
+	// 
+	export let onLinkClick; 
 
 	export let loading;
 	export let inputting;

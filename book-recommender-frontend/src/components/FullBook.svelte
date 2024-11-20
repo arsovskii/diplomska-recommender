@@ -17,9 +17,7 @@
 	};
 	export let loading = true;
 
-	// Default placeholder image (you can replace this with your preferred placeholder)
-
-	// Helper function to format date with fallback
+	
 	const formatDate = (/** @type {string | number | Date} */ dateString) => {
 		if (!dateString) return null;
 		const date = new Date(dateString);
@@ -64,7 +62,7 @@
 
 			<div class="mt-6 space-y-3 text-center">
 				<RatingStars id={book.id} />
-				<div class="text-lg font-medium text-primary">Rate this book!</div>
+				<div class="text-lg font-medium text-primary-content">Rate this book!</div>
 			</div>
 		</div>
 
@@ -80,7 +78,7 @@
 
 				<div class="flex flex-wrap items-center gap-4 mt-2">
 					<RatingStars id={1} interactible={false} rating={book.rating} />
-					<span class="text-2xl font-bold text-primary">{book.rating.toFixed(2)}</span>
+					<span class="text-2xl font-bold text-primary drop-shadow-[0_5px_5px_rgba(0,0,0,0.2)] ">{book.rating.toFixed(2)}</span>
 					<span class="text-base-content/70">
 						({book.countReviews?.toLocaleString() ?? 0} reviews)
 					</span>

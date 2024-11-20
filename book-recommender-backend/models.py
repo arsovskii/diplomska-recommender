@@ -12,6 +12,7 @@ class Book:
         self.rating = float(row["Average Score"])
         self.image = str(row["image_x"])
 
+    # Овој метод го користиме за да го претвориме објектот во речник за мала картичка 
     def to_dict_small(self):
         return {
             "id": self.id,
@@ -23,6 +24,7 @@ class Book:
             "image": self.image,
         }
 
+    # Овој метод го користиме за да го претвориме објектот во речник за голема картичка (страна со повеќе детали)
     def to_dict_large(self):
         return {
             "id": self.id,

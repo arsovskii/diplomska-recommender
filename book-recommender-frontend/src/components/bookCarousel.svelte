@@ -33,9 +33,11 @@
 
 	let user_id = 1;
 
+	// Константи за брзина на скролирање
 	const MOMENTUM_FACTOR = 0.95;
 	const VELOCITY_THRESHOLD = 0.5;
 
+	// Ги следиме промените во recommendationsStore, ако се случи ажурирање на книгите ги изнесуваме со анимација старите, а новите ги внесуваме
 	recommendationsStore.subscribe(async (newRecommendations) => {
 		console.log(newRecommendations);
 		if (newRecommendations && newRecommendations.length > 0) {
@@ -50,7 +52,7 @@
 			}
 		}
 	});
-
+	// Анимација за излез на книгите
 	const animateOutBooks = async () => {
 		isUpdating = true;
 		await anime({
@@ -64,6 +66,7 @@
 		}).finished;
 	};
 
+	// Анимација за влез на книгите
 	const animateInBooks = async () => {
 		await anime({
 			targets: '.book-card',
@@ -77,6 +80,7 @@
 		isUpdating = false;
 	};
 
+	// Функција за добивање на првични препораки
 	const getRecommendations = async () => {
 		try {
 			const response = await fetch('http://localhost:5000/api/recommend', {
@@ -98,7 +102,7 @@
 		}
 	};
 
-	// Mouse and touch event handlers remain the same as previous version
+	// функција за справување со клик на листата со препораки
 	function handleMouseDown(e: MouseEvent) {
 		isDragging = true;
 		startX = e.pageX;
@@ -120,6 +124,7 @@
 		scrollContainer.classList.add('dragging');
 	}
 
+	// функција за справување со движење на препорачаните книги
 	function handleMouseMove(e: MouseEvent) {
 		if (!isDragging) return;
 		e.preventDefault();
@@ -133,6 +138,7 @@
 		scrollContainer.scrollLeft = scrollLeft + walk;
 	}
 
+	// функција за примена на забрзувањето на скролирањето
 	function applyMomentum() {
 		if (Math.abs(velocity) < VELOCITY_THRESHOLD) {
 			velocity = 0;
@@ -146,6 +152,7 @@
 		rafId = requestAnimationFrame(applyMomentum);
 	}
 
+	// функција за справување со отпуштање
 	function handleMouseUp() {
 		if (!isDragging) return;
 		isDragging = false;
@@ -160,6 +167,8 @@
 		}
 	}
 
+
+	// 	функции за справување со допир на екран
 	function handleTouchStart(e: TouchEvent) {
 		isDragging = true;
 		startX = e.touches[0].pageX;
@@ -202,6 +211,7 @@
 		}
 	}
 
+	// функција за приближување на најблиската книга
 	function snapToNearestBook() {
 		const bookWidth = 256;
 		const gap = 24;
@@ -221,6 +231,7 @@
 		});
 	}
 
+	// променлива за чување на долготрајната акумулирана вредност, за полесно скролирање
 	let accumulatedDelta = 0;
 	const WHEEL_SENSITIVITY = 0.5;
 
@@ -249,6 +260,7 @@
 			scrollContainer.dataset.scrollTimeout = setTimeout(snapToNearestBook, 150).toString();
 		});
 	}
+
 	const slidyMount = async () => {
 		if (!hasMounted) return;
 		carouselContainer.style.display = 'block';
@@ -263,6 +275,7 @@
 		}).finished;
 	};
 
+	// При mount на компонентата, добиваме препораки и ги прикажуваме
 	onMount(() => {
 		(async () => {
 			await getRecommendations();

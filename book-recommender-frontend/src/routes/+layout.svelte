@@ -11,7 +11,7 @@
 	import Searchmodal from '../components/search/searchmodal.svelte';
 
 	let isLoading = false;
-
+	// Покажи load ако се вчитува
 	beforeNavigate(({ to }) => {
 		if (to && to.route && to.route.id) {
 			isLoading = true;

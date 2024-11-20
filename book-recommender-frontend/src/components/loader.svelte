@@ -31,7 +31,7 @@
 </div>
 
 <style>
-	/* Custom animations - add to your global.css or app.css */
+	
 	@keyframes book-wiggle {
 		0%,
 		100% {

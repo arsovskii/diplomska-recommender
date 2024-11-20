@@ -11,11 +11,11 @@
 	let favoriteGenre = '';
 
 	onMount(() => {
-		// Check if the user already has a favorite genre stored
+		// Вчитување на жанровите кои корисникот ги сака
 		const storedGenre = localStorage.getItem('favoriteGenres');
 		console.log(storedGenre);
 		if (!storedGenre) {
-			// Show the modal if no favorite genre is stored
+			
 			showFirstTime = true;
 		} else {
 			favoriteGenre = storedGenre;

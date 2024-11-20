@@ -11,18 +11,22 @@ api_routes = Blueprint("api", __name__)
 
 @api_routes.route("/api/recommend", methods=["POST"])
 def recommend_books():
-    # Here you can add more logic like reading user_id or preferences from request
+    # Враќаме 10 најпопуларни книги 
+    
     rand_books = get_random_top_books(10)
     return jsonify({"books": rand_books})
 
 
 @api_routes.route("/api/book", methods=["POST"])
 def book_by_id():
-    # Here you can add more logic like reading user_id or preferences from request
+    # Враќа книга според book_id
+
     try:
         content_type = request.headers.get("Content-Type")
 
         if content_type == "application/json":
+            # Пример на json што се праќа: {"book_id": 1}
+            
             json = request.json
             book_id = json.get("book_id")
             book = get_book(book_id)
@@ -42,6 +46,8 @@ def search_books():
         content_type = request.headers.get("Content-Type")
 
         if content_type == "application/json":
+            # Пример на json што се праќа: {"title": "Harry Potter"}
+
             json = request.json
             title = json.get("title")
             books = search_book_by_title(title)
@@ -61,6 +67,8 @@ def make_recommendation():
         content_type = request.headers.get("Content-Type")
 
         if content_type == "application/json":
+            
+            # Пример на json што се праќа: {"ratings": {"book_id": 1, "rating": 5,"book_id": 2, "rating": 3}}
             json = request.json
             predictions = retrieve_predicted_recommendations(json["ratings"])
 

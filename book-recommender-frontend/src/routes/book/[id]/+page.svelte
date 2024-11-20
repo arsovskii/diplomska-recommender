@@ -14,6 +14,7 @@
 	let book_id = data.bookId;
 	const getBook = async () => {
 		try {
+			// Преземи ги податоците за книгата
 			const response = await fetch('http://localhost:5000/api/book', {
 				method: 'POST',
 				headers: {

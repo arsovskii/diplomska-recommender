@@ -25,7 +25,7 @@
 
 	function saveGenre() {
 		if (selectedGenres.size > 0) {
-			// Save the selected genres to localStorage
+			// Зачувај ги избраните жанрови
 			localStorage.setItem('favoriteGenres', JSON.stringify(Array.from(selectedGenres)));
 			init_modal.close();
 		}
