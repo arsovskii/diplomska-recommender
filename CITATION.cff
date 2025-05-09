@@ -1,0 +1,40 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: GNN Book Recommender
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: David
+    family-names: Arsovski
+    email: arsovskidavid4@gmail.com
+repository-code: >-
+  https://github.com/arsovskii/diplomska-recommender/tree/master
+abstract: >-
+  This project introduces an interactive book recommendation
+  system that leverages Graph Neural Networks (GNNs) to
+  analyze and predict user preferences. By modeling the
+  relationships between users and books as a graph, the
+  system employs advanced GNN architectures—including
+  GraphSAGE, Graph Attention Networks (GAT), and
+  Transformer-based models—to generate personalized
+  recommendations. The backend is developed using Python,
+  PyTorch, and PyTorch Geometric, providing robust machine
+  learning capabilities. A RESTful API built with Flask
+  facilitates communication between the backend and the
+  frontend. The frontend, crafted with SvelteKit, offers a
+  responsive and dynamic user interface for real-time
+  interaction. The system utilizes a curated dataset of
+  books sourced from Kaggle, enriched with additional
+  information from Google and Wikipedia, and meticulously
+  preprocessed to enhance training efficacy. This
+  comprehensive approach aims to deliver accurate and
+  personalized book recommendations, enhancing user
+  engagement and satisfaction.
+keywords:
+  - Graph Neural Networks
+  - Recommender System
+license: MIT
